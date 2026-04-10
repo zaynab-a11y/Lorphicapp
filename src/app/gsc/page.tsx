@@ -1,6 +1,3 @@
-export const dynamic = 'force-dynamic'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import StatCard from '@/components/ui/StatCard'
 import Card from '@/components/ui/Card'
@@ -8,9 +5,7 @@ import GscChart from '@/components/charts/GscChart'
 import { gscData } from '@/lib/mockData'
 
 export default async function GscPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const user = null
 
   const { summary, chartData, topQueries } = gscData
 

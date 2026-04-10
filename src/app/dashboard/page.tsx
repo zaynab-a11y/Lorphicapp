@@ -1,6 +1,3 @@
-export const dynamic = 'force-dynamic'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import StatCard from '@/components/ui/StatCard'
 import Card from '@/components/ui/Card'
@@ -8,9 +5,7 @@ import TrafficChart from '@/components/charts/TrafficChart'
 import { dashboardStats, trafficChartData, rankingsData } from '@/lib/mockData'
 
 export default async function DashboardPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const user = null
 
   const stats = dashboardStats
   const top5Rankings = rankingsData.slice(0, 5)

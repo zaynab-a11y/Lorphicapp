@@ -1,14 +1,9 @@
-export const dynamic = 'force-dynamic'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import { rankingsData } from '@/lib/mockData'
 
 export default async function RankingsPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const user = null
 
   const improved = rankingsData.filter((r) => r.prevPosition > r.position).length
   const declined = rankingsData.filter((r) => r.prevPosition < r.position).length

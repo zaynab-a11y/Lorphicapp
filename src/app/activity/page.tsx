@@ -1,6 +1,3 @@
-export const dynamic = 'force-dynamic'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import { activityData } from '@/lib/mockData'
@@ -66,9 +63,7 @@ function formatRelativeTime(timestamp: string) {
 }
 
 export default async function ActivityPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const user = null
 
   const backlinks = activityData.filter((a) => a.type === 'backlink').length
   const technical = activityData.filter((a) => a.type === 'technical').length

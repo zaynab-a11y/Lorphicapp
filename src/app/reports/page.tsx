@@ -1,6 +1,3 @@
-export const dynamic = 'force-dynamic'
-import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import ReportDownloadButton from './ReportDownloadButton'
@@ -58,9 +55,7 @@ const colorMap: Record<string, { icon: string; bg: string; border: string; btn: 
 }
 
 export default async function ReportsPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
+  const user = null
 
   return (
     <DashboardLayout
