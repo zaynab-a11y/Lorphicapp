@@ -23,7 +23,7 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
-  const { supabase, profile } = await requireAdmin()
+  const { supabase, user, profile } = await requireAdmin()
   if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id, status, role, gsc_site_url } = await request.json()
@@ -32,7 +32,8 @@ export async function PATCH(request: NextRequest) {
   if (role) updates.role = role
   if (gsc_site_url !== undefined) updates.gsc_site_url = gsc_site_url
 
-  const { error } = await supabase.from('profiles').update(updates).eq('id', id)
+  const targetId = id === 'self' ? user!.id : id
+  const { error } = await supabase.from('profiles').update(updates).eq('id', targetId)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
 }

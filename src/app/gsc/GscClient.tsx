@@ -64,6 +64,20 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
     window.location.reload()
   }
 
+  const [siteUrlInput, setSiteUrlInput] = useState('')
+  const [savingUrl, setSavingUrl] = useState(false)
+
+  const handleSaveUrl = async () => {
+    if (!siteUrlInput) return
+    setSavingUrl(true)
+    await fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: 'self', gsc_site_url: siteUrlInput }),
+    })
+    window.location.reload()
+  }
+
   // Not connected — show connect button (admin only)
   if (!isConnected) {
     return (
@@ -102,20 +116,38 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
   // Connected but no site URL
   if (!gscSiteUrl) {
     return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
+      <div className="flex flex-col items-center justify-center py-24 gap-6">
         <div className="w-16 h-16 bg-yellow-400/10 border border-yellow-400/20 rounded-2xl flex items-center justify-center text-yellow-400">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
         </div>
         <div className="text-center">
-          <h3 className="text-white font-semibold text-lg mb-2">No GSC Property Set</h3>
-          <p className="text-muted text-sm">
+          <h3 className="text-white font-semibold text-lg mb-2">Set Your GSC Property</h3>
+          <p className="text-muted text-sm max-w-sm">
             {isAdmin
-              ? 'Go to Admin → Users and set the GSC site URL for this client.'
+              ? 'Enter the site URL exactly as it appears in Google Search Console.'
               : 'Your administrator needs to set your GSC property URL.'}
           </p>
         </div>
+        {isAdmin && (
+          <div className="flex items-center gap-2 w-full max-w-sm">
+            <input
+              type="text"
+              placeholder="https://yoursite.com/"
+              value={siteUrlInput}
+              onChange={(e) => setSiteUrlInput(e.target.value)}
+              className="flex-1 bg-card border border-border rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-muted/50 focus:outline-none focus:border-primary"
+            />
+            <button
+              onClick={handleSaveUrl}
+              disabled={savingUrl || !siteUrlInput}
+              className="bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50"
+            >
+              {savingUrl ? 'Saving...' : 'Save'}
+            </button>
+          </div>
+        )}
       </div>
     )
   }
