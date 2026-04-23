@@ -26,10 +26,11 @@ export async function PATCH(request: NextRequest) {
   const { supabase, profile } = await requireAdmin()
   if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { id, status, role } = await request.json()
+  const { id, status, role, gsc_site_url } = await request.json()
   const updates: Record<string, string> = {}
   if (status) updates.status = status
   if (role) updates.role = role
+  if (gsc_site_url !== undefined) updates.gsc_site_url = gsc_site_url
 
   const { error } = await supabase.from('profiles').update(updates).eq('id', id)
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

@@ -12,6 +12,7 @@ interface Profile {
   role: string
   status: string
   created_at: string
+  gsc_site_url?: string | null
 }
 
 interface Keyword {
@@ -201,6 +202,19 @@ export default function AdminPanel() {
     fetchAll()
   }
 
+  const [editingGsc, setEditingGsc] = useState<string | null>(null)
+  const [gscInputs, setGscInputs] = useState<Record<string, string>>({})
+
+  const handleSaveGsc = async (userId: string) => {
+    await fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: userId, gsc_site_url: gscInputs[userId] ?? '' }),
+    })
+    setEditingGsc(null)
+    fetchAll()
+  }
+
   const inputClass = 'bg-card border border-border rounded-xl px-3 py-2 text-white text-sm placeholder:text-muted/50 focus:outline-none focus:border-primary'
   const selectClass = 'bg-card border border-border rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-primary'
 
@@ -309,7 +323,7 @@ export default function AdminPanel() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border">
-                  {['Name', 'Email', 'Role', 'Status', 'Joined', ''].map((h) => (
+                  {['Name', 'Email', 'Role', 'Status', 'GSC Property', 'Joined', ''].map((h) => (
                     <th key={h} className="text-left text-muted font-medium pb-3 pr-4 last:text-right">{h}</th>
                   ))}
                 </tr>
@@ -321,6 +335,28 @@ export default function AdminPanel() {
                     <td className="py-3 pr-4 text-muted text-xs">{u.email}</td>
                     <td className="py-3 pr-4"><Badge variant={u.role === 'admin' ? 'warning' : 'info'}>{u.role}</Badge></td>
                     <td className="py-3 pr-4"><Badge variant={u.status === 'active' ? 'success' : 'default'}>{u.status}</Badge></td>
+                    <td className="py-3 pr-4">
+                      {editingGsc === u.id ? (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="text"
+                            placeholder="https://example.com/"
+                            value={gscInputs[u.id] ?? u.gsc_site_url ?? ''}
+                            onChange={(e) => setGscInputs({ ...gscInputs, [u.id]: e.target.value })}
+                            className="bg-background border border-primary/40 rounded-lg px-2 py-1 text-white text-xs w-40 focus:outline-none focus:border-primary"
+                          />
+                          <button onClick={() => handleSaveGsc(u.id)} className="text-emerald-400 text-xs hover:text-emerald-300 px-1">✓</button>
+                          <button onClick={() => setEditingGsc(null)} className="text-muted text-xs hover:text-white px-1">✕</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => { setEditingGsc(u.id); setGscInputs({ ...gscInputs, [u.id]: u.gsc_site_url ?? '' }) }}
+                          className="text-xs text-muted hover:text-primary transition-colors"
+                        >
+                          {u.gsc_site_url ? <span className="text-primary font-mono">{u.gsc_site_url}</span> : <span className="text-muted/50">+ Set URL</span>}
+                        </button>
+                      )}
+                    </td>
                     <td className="py-3 pr-4 text-muted text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
                     <td className="py-3 text-right">
                       <button onClick={() => handleDeleteUser(u.id)} className="text-muted hover:text-red-400 transition-colors p-1">
