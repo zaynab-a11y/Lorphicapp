@@ -1,6 +1,7 @@
+import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
-import { activityData } from '@/lib/mockData'
+import { createClient } from '@/lib/supabase/server'
 
 const typeConfig: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ReactNode }> = {
   backlink: {
@@ -49,31 +50,33 @@ const impactConfig: Record<string, { label: string; className: string }> = {
   low: { label: 'Low', className: 'text-muted bg-muted/10' },
 }
 
-function formatRelativeTime(timestamp: string) {
-  const date = new Date(timestamp)
-  const now = new Date('2024-04-10') // Use a fixed "now" for demo
-  const diff = now.getTime() - date.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  const hours = Math.floor(diff / (1000 * 60 * 60))
-
-  if (hours < 1) return 'Just now'
-  if (hours < 24) return `${hours}h ago`
-  if (days === 1) return 'Yesterday'
-  return `${days} days ago`
-}
-
 export default async function ActivityPage() {
-  const user = null
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-  const backlinks = activityData.filter((a) => a.type === 'backlink').length
-  const technical = activityData.filter((a) => a.type === 'technical').length
-  const content = activityData.filter((a) => a.type === 'content').length
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, email')
+    .eq('id', user.id)
+    .single()
+
+  const { data: activityData } = await supabase
+    .from('activity_feed')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  const items = activityData ?? []
+  const backlinks = items.filter((a) => a.type === 'backlink').length
+  const technical = items.filter((a) => a.type === 'technical').length
+  const content = items.filter((a) => a.type === 'content').length
 
   return (
     <DashboardLayout
       title="Activity Feed"
       subtitle="All SEO updates and improvements"
-      user={user}
+      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
     >
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
@@ -106,46 +109,44 @@ export default async function ActivityPage() {
         </div>
       </div>
 
-      <Card title="Activity Log" subtitle={`${activityData.length} updates in the last 30 days`}>
-        <div className="space-y-0">
-          {activityData.map((item, idx) => {
-            const config = typeConfig[item.type]
-            const impact = impactConfig[item.impact]
-            const isLast = idx === activityData.length - 1
-
-            return (
-              <div key={item.id} className="flex gap-4">
-                {/* Timeline line */}
-                <div className="flex flex-col items-center">
-                  <div className={`w-9 h-9 rounded-xl ${config.bg} border ${config.border} flex items-center justify-center flex-shrink-0 ${config.color}`}>
-                    {config.icon}
+      <Card title="Activity Log" subtitle={items.length > 0 ? `${items.length} updates` : 'No updates yet'}>
+        {items.length === 0 ? (
+          <div className="py-12 text-center">
+            <p className="text-muted text-sm">No SEO updates posted yet.</p>
+            <p className="text-muted/60 text-xs mt-1">Your administrator will post updates here as work is completed.</p>
+          </div>
+        ) : (
+          <div className="space-y-0">
+            {items.map((item, idx) => {
+              const config = typeConfig[item.type] ?? typeConfig.backlink
+              const impact = impactConfig[item.impact] ?? impactConfig.medium
+              const isLast = idx === items.length - 1
+              return (
+                <div key={item.id} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className={`w-9 h-9 rounded-xl ${config.bg} border ${config.border} flex items-center justify-center flex-shrink-0 ${config.color}`}>
+                      {config.icon}
+                    </div>
+                    {!isLast && <div className="w-px flex-1 bg-border mt-1 mb-1 min-h-[20px]" />}
                   </div>
-                  {!isLast && <div className="w-px flex-1 bg-border mt-1 mb-1 min-h-[20px]" />}
-                </div>
-
-                {/* Content */}
-                <div className={`flex-1 pb-4 ${isLast ? '' : ''}`}>
-                  <div className="flex items-start justify-between gap-4 mb-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h4 className="text-white font-semibold text-sm">{item.title}</h4>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${config.bg} ${config.color}`}>
-                        {config.label}
-                      </span>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${impact.className}`}>
-                        {impact.label} Impact
+                  <div className="flex-1 pb-4">
+                    <div className="flex items-start justify-between gap-4 mb-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-white font-semibold text-sm">{item.title}</h4>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${config.bg} ${config.color}`}>{config.label}</span>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${impact.className}`}>{impact.label} Impact</span>
+                      </div>
+                      <span className="text-muted text-xs flex-shrink-0">
+                        {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>
-                    <span className="text-muted text-xs flex-shrink-0">{formatRelativeTime(item.timestamp)}</span>
+                    <p className="text-muted text-sm leading-relaxed">{item.description}</p>
                   </div>
-                  <p className="text-muted text-sm leading-relaxed">{item.description}</p>
-                  <p className="text-muted/50 text-xs mt-1">
-                    {new Date(item.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                  </p>
                 </div>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        )}
       </Card>
     </DashboardLayout>
   )

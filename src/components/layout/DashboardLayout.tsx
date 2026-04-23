@@ -5,7 +5,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode
   title: string
   subtitle?: string
-  user?: { email?: string } | null
+  user?: { email?: string; name?: string } | null
 }
 
 export default function DashboardLayout({ children, title, subtitle, user }: DashboardLayoutProps) {

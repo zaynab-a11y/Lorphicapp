@@ -3,11 +3,12 @@
 interface TopBarProps {
   title: string
   subtitle?: string
-  user?: { email?: string } | null
+  user?: { email?: string; name?: string } | null
 }
 
 export default function TopBar({ title, subtitle, user }: TopBarProps) {
-  const initials = user?.email?.slice(0, 2).toUpperCase() ?? 'U'
+  const displayName = user?.name || user?.email?.split('@')[0] || 'User'
+  const initials = displayName.slice(0, 2).toUpperCase()
 
   return (
     <header className="h-16 border-b border-border flex items-center justify-between px-6 bg-background/80 backdrop-blur-sm sticky top-0 z-30">
@@ -32,7 +33,7 @@ export default function TopBar({ title, subtitle, user }: TopBarProps) {
             {initials}
           </div>
           <div className="hidden sm:block">
-            <p className="text-white text-xs font-medium leading-tight">{user?.email?.split('@')[0] ?? 'User'}</p>
+            <p className="text-white text-xs font-medium leading-tight">{displayName}</p>
             <p className="text-muted text-xs">{user?.email ?? ''}</p>
           </div>
         </div>
