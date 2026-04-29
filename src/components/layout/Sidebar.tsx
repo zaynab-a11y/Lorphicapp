@@ -5,6 +5,11 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import clsx from 'clsx'
 
+interface SidebarProps {
+  isOpen?: boolean
+  onClose?: () => void
+}
+
 const navItems = [
   {
     href: '/dashboard',
@@ -72,7 +77,7 @@ const navItems = [
   },
 ]
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -83,9 +88,14 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex flex-col z-40">
+    <aside
+      className={clsx(
+        'fixed left-0 top-0 h-screen w-64 bg-card border-r border-border flex flex-col z-40 transition-transform duration-300 ease-in-out',
+        isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
+      )}
+    >
       {/* Logo */}
-      <div className="p-6 border-b border-border">
+      <div className="p-6 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center flex-shrink-0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
@@ -97,6 +107,15 @@ export default function Sidebar() {
             <p className="text-muted text-xs">SEO Dashboard</p>
           </div>
         </div>
+        <button
+          onClick={onClose}
+          className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg text-muted hover:text-foreground hover:bg-black/5 transition-colors"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
       </div>
 
       {/* Navigation */}
@@ -109,6 +128,7 @@ export default function Sidebar() {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={onClose}
                   className={clsx(
                     'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
                     isActive
@@ -116,7 +136,7 @@ export default function Sidebar() {
                       : 'text-muted hover:text-foreground hover:bg-black/5'
                   )}
                 >
-                  <span className={isActive ? 'text-primary' : 'text-muted group-hover:text-foreground'}>
+                  <span className={isActive ? 'text-primary' : 'text-muted'}>
                     {item.icon}
                   </span>
                   {item.label}
