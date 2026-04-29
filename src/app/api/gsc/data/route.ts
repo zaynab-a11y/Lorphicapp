@@ -5,7 +5,7 @@ async function getValidAccessToken(service: ReturnType<typeof createServiceClien
   const { data: tokenRow } = await service.from('gsc_tokens').select('*').eq('id', 1).single()
   if (!tokenRow) return null
 
-  const isExpired = tokenRow.expiry_date && Date.now() > tokenRow.expiry_date - 60000
+  const isExpired = tokenRow.expires_at && Date.now() > new Date(tokenRow.expires_at).getTime() - 60000
 
   if (!isExpired) return tokenRow.access_token
 
@@ -27,7 +27,7 @@ async function getValidAccessToken(service: ReturnType<typeof createServiceClien
 
   await service.from('gsc_tokens').update({
     access_token: refreshed.access_token,
-    expiry_date: refreshed.expires_in ? Date.now() + refreshed.expires_in * 1000 : null,
+    expires_at: refreshed.expires_in ? new Date(Date.now() + refreshed.expires_in * 1000).toISOString() : null,
     updated_at: new Date().toISOString(),
   }).eq('id', 1)
 

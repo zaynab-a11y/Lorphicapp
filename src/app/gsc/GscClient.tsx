@@ -134,7 +134,7 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
           <div className="flex items-center gap-2 w-full max-w-sm">
             <input
               type="text"
-              placeholder="https://yoursite.com/"
+              placeholder="sc-domain:example.com or https://example.com/"
               value={siteUrlInput}
               onChange={(e) => setSiteUrlInput(e.target.value)}
               className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm placeholder:text-muted/50 focus:outline-none focus:border-primary"
