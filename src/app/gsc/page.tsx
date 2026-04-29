@@ -3,6 +3,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import GscClient from './GscClient'
 
+export const dynamic = 'force-dynamic'
+
 export default async function GscPage({ searchParams }: { searchParams: { connected?: string; error?: string } }) {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
