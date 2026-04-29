@@ -33,12 +33,12 @@ export default async function RankingsPage() {
     >
       <div className="flex flex-wrap gap-3 mb-6">
         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3 flex items-center gap-2">
-          <span className="text-emerald-400 text-xl font-bold">{improved}</span>
-          <span className="text-emerald-400 text-sm">Improved</span>
+          <span className="text-emerald-600 text-xl font-bold">{improved}</span>
+          <span className="text-emerald-600 text-sm">Improved</span>
         </div>
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 flex items-center gap-2">
-          <span className="text-red-400 text-xl font-bold">{declined}</span>
-          <span className="text-red-400 text-sm">Declined</span>
+          <span className="text-red-600 text-xl font-bold">{declined}</span>
+          <span className="text-red-600 text-sm">Declined</span>
         </div>
         <div className="bg-muted/10 border border-border rounded-xl px-4 py-3 flex items-center gap-2">
           <span className="text-muted text-xl font-bold">{unchanged}</span>
@@ -75,23 +75,23 @@ export default async function RankingsPage() {
                   const change = row.prev_position != null && row.position != null
                     ? row.prev_position - row.position : 0
                   return (
-                    <tr key={row.id} className="hover:bg-white/2 transition-colors">
+                    <tr key={row.id} className="hover:bg-black/3 transition-colors">
                       <td className="py-3.5 pr-4 text-muted text-xs">{idx + 1}</td>
-                      <td className="py-3.5 pr-4 text-white font-medium">{row.keyword}</td>
+                      <td className="py-3.5 pr-4 text-foreground font-medium">{row.keyword}</td>
                       <td className="py-3.5 px-4 text-right">
                         {row.position != null ? (
                           <span className={`font-bold ${
-                            row.position <= 3 ? 'text-emerald-400' :
+                            row.position <= 3 ? 'text-emerald-600' :
                             row.position <= 10 ? 'text-primary' :
-                            row.position <= 20 ? 'text-yellow-400' : 'text-muted'
+                            row.position <= 20 ? 'text-amber-600' : 'text-muted'
                           }`}>#{row.position}</span>
                         ) : <span className="text-muted">—</span>}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         {change > 0 ? (
-                          <span className="inline-flex items-center gap-1 text-emerald-400 font-semibold bg-emerald-400/10 px-2 py-0.5 rounded-md">↑{change}</span>
+                          <span className="inline-flex items-center gap-1 text-emerald-600 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-md">↑{change}</span>
                         ) : change < 0 ? (
-                          <span className="inline-flex items-center gap-1 text-red-400 font-semibold bg-red-400/10 px-2 py-0.5 rounded-md">↓{Math.abs(change)}</span>
+                          <span className="inline-flex items-center gap-1 text-red-600 font-semibold bg-red-500/10 px-2 py-0.5 rounded-md">↓{Math.abs(change)}</span>
                         ) : <span className="text-muted">—</span>}
                       </td>
                       <td className="py-3.5 px-4 text-right text-muted">{row.volume?.toLocaleString() ?? '—'}</td>
@@ -99,10 +99,10 @@ export default async function RankingsPage() {
                         {row.difficulty != null ? (
                           <div className="flex items-center justify-end gap-2">
                             <div className="w-16 h-1.5 bg-border rounded-full overflow-hidden">
-                              <div className={`h-full rounded-full ${row.difficulty < 45 ? 'bg-emerald-400' : row.difficulty < 60 ? 'bg-yellow-400' : 'bg-red-400'}`}
+                              <div className={`h-full rounded-full ${row.difficulty < 45 ? 'bg-emerald-500' : row.difficulty < 60 ? 'bg-amber-500' : 'bg-red-500'}`}
                                 style={{ width: `${row.difficulty}%` }} />
                             </div>
-                            <span className={`text-xs font-medium ${row.difficulty < 45 ? 'text-emerald-400' : row.difficulty < 60 ? 'text-yellow-400' : 'text-red-400'}`}>
+                            <span className={`text-xs font-medium ${row.difficulty < 45 ? 'text-emerald-600' : row.difficulty < 60 ? 'text-amber-600' : 'text-red-600'}`}>
                               {row.difficulty}
                             </span>
                           </div>

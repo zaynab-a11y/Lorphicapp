@@ -215,8 +215,8 @@ export default function AdminPanel() {
     fetchAll()
   }
 
-  const inputClass = 'bg-card border border-border rounded-xl px-3 py-2 text-white text-sm placeholder:text-muted/50 focus:outline-none focus:border-primary'
-  const selectClass = 'bg-card border border-border rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-primary'
+  const inputClass = 'bg-background border border-border rounded-xl px-3 py-2 text-foreground text-sm placeholder:text-muted/50 focus:outline-none focus:border-primary'
+  const selectClass = 'bg-background border border-border rounded-xl px-3 py-2 text-foreground text-sm focus:outline-none focus:border-primary'
 
   const tabs = [
     { id: 'users' as Tab, label: 'Users', count: users.length },
@@ -242,9 +242,9 @@ export default function AdminPanel() {
       </div>
 
       {error && (
-        <div className="mb-4 flex items-center gap-2 text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3">
+        <div className="mb-4 flex items-center gap-2 text-red-600 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">
           {error}
-          <button onClick={() => setError('')} className="ml-auto text-red-400/60 hover:text-red-400">✕</button>
+          <button onClick={() => setError('')} className="ml-auto text-red-600/60 hover:text-red-600">✕</button>
         </div>
       )}
 
@@ -252,9 +252,9 @@ export default function AdminPanel() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {[
           { label: 'Total Users', value: users.length, color: 'text-primary' },
-          { label: 'Active Users', value: users.filter((u) => u.status === 'active').length, color: 'text-emerald-400' },
+          { label: 'Active Users', value: users.filter((u) => u.status === 'active').length, color: 'text-emerald-600' },
           { label: 'Tracked Keywords', value: keywords.length, color: 'text-accent' },
-          { label: 'Admin Users', value: users.filter((u) => u.role === 'admin').length, color: 'text-violet-400' },
+          { label: 'Admin Users', value: users.filter((u) => u.role === 'admin').length, color: 'text-orange-600' },
         ].map((s) => (
           <div key={s.label} className="bg-card border border-border rounded-2xl p-4">
             <p className={`text-2xl font-bold ${s.color}`}>{s.value}</p>
@@ -270,7 +270,7 @@ export default function AdminPanel() {
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
-              activeTab === tab.id ? 'bg-primary/15 text-primary' : 'text-muted hover:text-white'
+              activeTab === tab.id ? 'bg-primary/15 text-primary' : 'text-muted hover:text-foreground'
             }`}
           >
             {tab.label}
@@ -300,7 +300,7 @@ export default function AdminPanel() {
         >
           {showAddUser && (
             <div className="mb-6 p-4 bg-background border border-primary/20 rounded-xl">
-              <h4 className="text-white font-semibold text-sm mb-3">Create New User</h4>
+              <h4 className="text-foreground font-semibold text-sm mb-3">Create New User</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                 <input type="text" placeholder="Full name" value={newUser.name}
                   onChange={(e) => setNewUser({ ...newUser, name: e.target.value })} className={inputClass} />
@@ -330,8 +330,8 @@ export default function AdminPanel() {
               </thead>
               <tbody className="divide-y divide-border">
                 {users.map((u) => (
-                  <tr key={u.id} className="hover:bg-white/2 transition-colors">
-                    <td className="py-3 pr-4 text-white font-medium">{u.name}</td>
+                  <tr key={u.id} className="hover:bg-black/3 transition-colors">
+                    <td className="py-3 pr-4 text-foreground font-medium">{u.name}</td>
                     <td className="py-3 pr-4 text-muted text-xs">{u.email}</td>
                     <td className="py-3 pr-4"><Badge variant={u.role === 'admin' ? 'warning' : 'info'}>{u.role}</Badge></td>
                     <td className="py-3 pr-4"><Badge variant={u.status === 'active' ? 'success' : 'default'}>{u.status}</Badge></td>
@@ -343,10 +343,10 @@ export default function AdminPanel() {
                             placeholder="https://example.com/"
                             value={gscInputs[u.id] ?? u.gsc_site_url ?? ''}
                             onChange={(e) => setGscInputs({ ...gscInputs, [u.id]: e.target.value })}
-                            className="bg-background border border-primary/40 rounded-lg px-2 py-1 text-white text-xs w-40 focus:outline-none focus:border-primary"
+                            className="bg-background border border-primary/40 rounded-lg px-2 py-1 text-foreground text-xs w-40 focus:outline-none focus:border-primary"
                           />
-                          <button onClick={() => handleSaveGsc(u.id)} className="text-emerald-400 text-xs hover:text-emerald-300 px-1">✓</button>
-                          <button onClick={() => setEditingGsc(null)} className="text-muted text-xs hover:text-white px-1">✕</button>
+                          <button onClick={() => handleSaveGsc(u.id)} className="text-emerald-600 text-xs hover:text-emerald-700 px-1">✓</button>
+                          <button onClick={() => setEditingGsc(null)} className="text-muted text-xs hover:text-foreground px-1">✕</button>
                         </div>
                       ) : (
                         <button
@@ -359,7 +359,7 @@ export default function AdminPanel() {
                     </td>
                     <td className="py-3 pr-4 text-muted text-xs">{new Date(u.created_at).toLocaleDateString()}</td>
                     <td className="py-3 text-right">
-                      <button onClick={() => handleDeleteUser(u.id)} className="text-muted hover:text-red-400 transition-colors p-1">
+                      <button onClick={() => handleDeleteUser(u.id)} className="text-muted hover:text-red-600 transition-colors p-1">
                         <TrashIcon />
                       </button>
                     </td>
@@ -389,7 +389,7 @@ export default function AdminPanel() {
         >
           {showAddKeyword && (
             <div className="mb-6 p-4 bg-background border border-primary/20 rounded-xl">
-              <h4 className="text-white font-semibold text-sm mb-3">Assign Keyword to Client</h4>
+              <h4 className="text-foreground font-semibold text-sm mb-3">Assign Keyword to Client</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                 <select value={newKeyword.user_id} onChange={(e) => setNewKeyword({ ...newKeyword, user_id: e.target.value })} className={selectClass}>
                   <option value="">Select client...</option>
@@ -425,21 +425,21 @@ export default function AdminPanel() {
               </thead>
               <tbody className="divide-y divide-border">
                 {keywords.map((kw) => (
-                  <tr key={kw.id} className="hover:bg-white/2 transition-colors">
-                    <td className="py-3 pr-4 text-white font-medium">{kw.keyword}</td>
+                  <tr key={kw.id} className="hover:bg-black/3 transition-colors">
+                    <td className="py-3 pr-4 text-foreground font-medium">{kw.keyword}</td>
                     <td className="py-3 pr-4">
                       {kw.profiles ? (
                         <div>
-                          <p className="text-white text-sm">{kw.profiles.name}</p>
+                          <p className="text-foreground text-sm">{kw.profiles.name}</p>
                           <p className="text-muted text-xs">{kw.profiles.email}</p>
                         </div>
                       ) : <span className="text-muted">—</span>}
                     </td>
-                    <td className="py-3 pr-4 text-white">{kw.position != null ? `#${kw.position}` : '—'}</td>
+                    <td className="py-3 pr-4 text-foreground">{kw.position != null ? `#${kw.position}` : '—'}</td>
                     <td className="py-3 pr-4 text-muted">{kw.volume?.toLocaleString() ?? '—'}</td>
                     <td className="py-3 pr-4 text-muted">{kw.difficulty ?? '—'}</td>
                     <td className="py-3 text-right">
-                      <button onClick={() => handleDeleteKeyword(kw.id)} className="text-muted hover:text-red-400 transition-colors p-1">
+                      <button onClick={() => handleDeleteKeyword(kw.id)} className="text-muted hover:text-red-600 transition-colors p-1">
                         <TrashIcon />
                       </button>
                     </td>
@@ -469,7 +469,7 @@ export default function AdminPanel() {
         >
           {showAddActivity && (
             <div className="mb-6 p-4 bg-background border border-primary/20 rounded-xl">
-              <h4 className="text-white font-semibold text-sm mb-3">Post SEO Update</h4>
+              <h4 className="text-foreground font-semibold text-sm mb-3">Post SEO Update</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                 <select value={newActivity.user_id} onChange={(e) => setNewActivity({ ...newActivity, user_id: e.target.value })} className={selectClass}>
                   <option value="">Select client...</option>
@@ -503,7 +503,7 @@ export default function AdminPanel() {
               <div key={item.id} className="flex items-start justify-between gap-4 py-3 border-b border-border last:border-0">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="text-white font-medium text-sm">{item.title}</span>
+                    <span className="text-foreground font-medium text-sm">{item.title}</span>
                     <span className="text-xs px-2 py-0.5 rounded-md bg-primary/10 text-primary">{item.type}</span>
                     <span className="text-xs px-2 py-0.5 rounded-md bg-border text-muted">{item.impact} impact</span>
                   </div>
@@ -512,7 +512,7 @@ export default function AdminPanel() {
                     {item.profiles?.name ?? 'Unknown'} · {new Date(item.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                <button onClick={() => handleDeleteActivity(item.id)} className="text-muted hover:text-red-400 transition-colors p-1 flex-shrink-0">
+                <button onClick={() => handleDeleteActivity(item.id)} className="text-muted hover:text-red-600 transition-colors p-1 flex-shrink-0">
                   <TrashIcon />
                 </button>
               </div>
@@ -537,7 +537,7 @@ export default function AdminPanel() {
         >
           {showAddReport && (
             <div className="mb-6 p-4 bg-background border border-primary/20 rounded-xl">
-              <h4 className="text-white font-semibold text-sm mb-3">Create Report for Client</h4>
+              <h4 className="text-foreground font-semibold text-sm mb-3">Create Report for Client</h4>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                 <select value={newReport.user_id} onChange={(e) => setNewReport({ ...newReport, user_id: e.target.value })} className={selectClass}>
                   <option value="">Select client...</option>
@@ -568,12 +568,12 @@ export default function AdminPanel() {
               </thead>
               <tbody className="divide-y divide-border">
                 {reports.map((r) => (
-                  <tr key={r.id} className="hover:bg-white/2 transition-colors">
-                    <td className="py-3 pr-4 text-white font-medium">{r.title}</td>
+                  <tr key={r.id} className="hover:bg-black/3 transition-colors">
+                    <td className="py-3 pr-4 text-foreground font-medium">{r.title}</td>
                     <td className="py-3 pr-4">
                       {r.profiles ? (
                         <div>
-                          <p className="text-white text-sm">{r.profiles.name}</p>
+                          <p className="text-foreground text-sm">{r.profiles.name}</p>
                           <p className="text-muted text-xs">{r.profiles.email}</p>
                         </div>
                       ) : <span className="text-muted">—</span>}
@@ -581,7 +581,7 @@ export default function AdminPanel() {
                     <td className="py-3 pr-4"><Badge variant="info">{r.type}</Badge></td>
                     <td className="py-3 pr-4 text-muted text-xs">{new Date(r.created_at).toLocaleDateString()}</td>
                     <td className="py-3 text-right">
-                      <button onClick={() => handleDeleteReport(r.id)} className="text-muted hover:text-red-400 transition-colors p-1">
+                      <button onClick={() => handleDeleteReport(r.id)} className="text-muted hover:text-red-600 transition-colors p-1">
                         <TrashIcon />
                       </button>
                     </td>

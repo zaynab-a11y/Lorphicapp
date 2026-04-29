@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 const colorMap: Record<string, { icon: string; bg: string; border: string; btn: string }> = {
   full: { icon: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20', btn: 'bg-primary hover:bg-primary/90' },
   rankings: { icon: 'text-accent', bg: 'bg-accent/10', border: 'border-accent/20', btn: 'bg-accent hover:bg-accent/90' },
-  traffic: { icon: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', btn: 'bg-emerald-500 hover:bg-emerald-500/90' },
+  traffic: { icon: 'text-emerald-600', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20', btn: 'bg-emerald-600 hover:bg-emerald-700' },
 }
 
 const reportMeta: Record<string, { title: string; description: string; pages: string; icon: React.ReactNode }> = {
@@ -87,7 +87,7 @@ export default async function ReportsPage() {
                   {meta.icon}
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-white font-semibold text-base mb-1">{meta.title}</h3>
+                  <h3 className="text-foreground font-semibold text-base mb-1">{meta.title}</h3>
                   <p className="text-muted text-sm leading-relaxed">{meta.description}</p>
                   <p className="text-muted/60 text-xs mt-2">{meta.pages} · PDF format</p>
                 </div>
@@ -118,7 +118,7 @@ export default async function ReportsPage() {
                       </svg>
                     </div>
                     <div>
-                      <p className="text-white text-sm font-medium">{report.title}</p>
+                      <p className="text-foreground text-sm font-medium">{report.title}</p>
                       <p className="text-muted text-xs">
                         {new Date(report.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · PDF format
                       </p>

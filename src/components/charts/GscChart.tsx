@@ -24,10 +24,10 @@ interface DataPoint {
 }
 
 const metricConfig: Record<Metric, { label: string; color: string; formatter: (v: number) => string }> = {
-  clicks: { label: 'Clicks', color: '#14B8A6', formatter: (v) => v.toLocaleString() },
+  clicks: { label: 'Clicks', color: '#0D9488', formatter: (v) => v.toLocaleString() },
   impressions: { label: 'Impressions', color: '#F97316', formatter: (v) => v.toLocaleString() },
-  ctr: { label: 'CTR', color: '#8B5CF6', formatter: (v) => `${v.toFixed(1)}%` },
-  position: { label: 'Avg Position', color: '#EC4899', formatter: (v) => v.toFixed(1) },
+  ctr: { label: 'CTR', color: '#0F172A', formatter: (v) => `${v.toFixed(1)}%` },
+  position: { label: 'Avg Position', color: '#EA580C', formatter: (v) => v.toFixed(1) },
 }
 
 const CustomTooltip = ({ active, payload, label, metric }: any) => {
@@ -35,11 +35,11 @@ const CustomTooltip = ({ active, payload, label, metric }: any) => {
     const config = metricConfig[metric as Metric]
     return (
       <div className="bg-card border border-border rounded-xl p-3 shadow-card text-sm">
-        <p className="text-white font-semibold mb-1">{label}</p>
+        <p className="text-foreground font-semibold mb-1">{label}</p>
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full" style={{ background: config.color }} />
           <span className="text-muted">{config.label}:</span>
-          <span className="text-white font-medium">{config.formatter(payload[0].value)}</span>
+          <span className="text-foreground font-medium">{config.formatter(payload[0].value)}</span>
         </div>
       </div>
     )
@@ -61,8 +61,8 @@ export default function GscChart({ data }: { data: DataPoint[] }) {
             className={clsx(
               'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
               activeMetric === m
-                ? 'text-white'
-                : 'text-muted hover:text-white bg-transparent hover:bg-white/5'
+                ? 'text-foreground'
+                : 'text-muted hover:text-foreground bg-transparent hover:bg-black/5'
             )}
             style={activeMetric === m ? { background: metricConfig[m].color + '20', color: metricConfig[m].color, boxShadow: `0 0 0 1px ${metricConfig[m].color}40` } : {}}
           >
@@ -72,10 +72,10 @@ export default function GscChart({ data }: { data: DataPoint[] }) {
       </div>
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data} margin={{ top: 5, right: 5, left: -20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-          <XAxis dataKey="date" tick={{ fill: '#9CA3AF', fontSize: 11 }} tickLine={false} axisLine={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#CCFBF1" vertical={false} />
+          <XAxis dataKey="date" tick={{ fill: '#64748B', fontSize: 11 }} tickLine={false} axisLine={false} />
           <YAxis
-            tick={{ fill: '#9CA3AF', fontSize: 11 }}
+            tick={{ fill: '#64748B', fontSize: 11 }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v) => {
