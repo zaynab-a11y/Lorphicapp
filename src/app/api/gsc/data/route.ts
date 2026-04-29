@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
     fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ startDate, endDate, dimensions: [] }),
+      body: JSON.stringify({ startDate, endDate }),
     }),
     fetch(`https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`, {
       method: 'POST',

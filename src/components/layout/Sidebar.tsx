@@ -93,7 +93,7 @@ export default function Sidebar() {
             </svg>
           </div>
           <div>
-            <h1 className="text-white font-bold text-base leading-tight">Lorphic</h1>
+            <h1 className="text-foreground font-bold text-base leading-tight">Lorphic</h1>
             <p className="text-muted text-xs">SEO Dashboard</p>
           </div>
         </div>
@@ -113,10 +113,10 @@ export default function Sidebar() {
                     'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all',
                     isActive
                       ? 'bg-primary/15 text-primary'
-                      : 'text-muted hover:text-white hover:bg-white/5'
+                      : 'text-muted hover:text-foreground hover:bg-black/5'
                   )}
                 >
-                  <span className={isActive ? 'text-primary' : 'text-muted group-hover:text-white'}>
+                  <span className={isActive ? 'text-primary' : 'text-muted group-hover:text-foreground'}>
                     {item.icon}
                   </span>
                   {item.label}
@@ -134,7 +134,7 @@ export default function Sidebar() {
       <div className="p-4 border-t border-border">
         <button
           onClick={handleSignOut}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-white hover:bg-white/5 transition-all"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted hover:text-foreground hover:bg-black/5 transition-all"
         >
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>

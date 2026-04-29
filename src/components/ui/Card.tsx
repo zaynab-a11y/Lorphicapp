@@ -14,7 +14,7 @@ export default function Card({ children, className, title, subtitle, action }: C
       {(title || action) && (
         <div className="flex items-center justify-between px-6 py-4 border-b border-border">
           <div>
-            {title && <h3 className="text-white font-semibold text-base">{title}</h3>}
+            {title && <h3 className="text-foreground font-semibold text-base">{title}</h3>}
             {subtitle && <p className="text-muted text-xs mt-0.5">{subtitle}</p>}
           </div>
           {action && <div>{action}</div>}

@@ -114,7 +114,7 @@ export default async function DashboardPage() {
               <div key={item.label}>
                 <div className="flex justify-between text-sm mb-1.5">
                   <span className="text-muted">{item.label}</span>
-                  <span className="text-white font-semibold">{item.value}</span>
+                  <span className="text-foreground font-semibold">{item.value}</span>
                 </div>
                 <div className="h-1.5 bg-border rounded-full overflow-hidden">
                   <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${item.bar * 100}%` }} />
@@ -146,20 +146,20 @@ export default async function DashboardPage() {
                   const change = row.prev_position != null && row.position != null
                     ? row.prev_position - row.position : 0
                   return (
-                    <tr key={row.id} className="hover:bg-white/2 transition-colors">
-                      <td className="py-3 pr-4 text-white font-medium">{row.keyword}</td>
+                    <tr key={row.id} className="hover:bg-black/3 transition-colors">
+                      <td className="py-3 pr-4 text-foreground font-medium">{row.keyword}</td>
                       <td className="py-3 px-4 text-right">
-                        <span className="text-white font-semibold">{row.position != null ? `#${row.position}` : '—'}</span>
+                        <span className="text-foreground font-semibold">{row.position != null ? `#${row.position}` : '—'}</span>
                       </td>
                       <td className="py-3 px-4 text-right">
-                        {change > 0 && <span className="text-emerald-400 font-medium">↑{change}</span>}
-                        {change < 0 && <span className="text-red-400 font-medium">↓{Math.abs(change)}</span>}
+                        {change > 0 && <span className="text-emerald-600 font-medium">↑{change}</span>}
+                        {change < 0 && <span className="text-red-600 font-medium">↓{Math.abs(change)}</span>}
                         {change === 0 && <span className="text-muted">—</span>}
                       </td>
                       <td className="py-3 px-4 text-right text-muted">{row.volume?.toLocaleString() ?? '—'}</td>
                       <td className="py-3 pl-4 text-right">
                         {row.difficulty != null ? (
-                          <span className={row.difficulty < 45 ? 'text-emerald-400' : row.difficulty < 60 ? 'text-yellow-400' : 'text-red-400'}>
+                          <span className={row.difficulty < 45 ? 'text-emerald-600' : row.difficulty < 60 ? 'text-amber-600' : 'text-red-600'}>
                             {row.difficulty}
                           </span>
                         ) : <span className="text-muted">—</span>}

@@ -30,9 +30,9 @@ const typeConfig: Record<string, { label: string; color: string; bg: string; bor
   },
   content: {
     label: 'Content',
-    color: 'text-violet-400',
-    bg: 'bg-violet-500/10',
-    border: 'border-violet-500/20',
+    color: 'text-orange-600',
+    bg: 'bg-orange-500/10',
+    border: 'border-orange-500/20',
     icon: (
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -45,8 +45,8 @@ const typeConfig: Record<string, { label: string; color: string; bg: string; bor
 }
 
 const impactConfig: Record<string, { label: string; className: string }> = {
-  high: { label: 'High', className: 'text-emerald-400 bg-emerald-400/10' },
-  medium: { label: 'Medium', className: 'text-yellow-400 bg-yellow-400/10' },
+  high: { label: 'High', className: 'text-emerald-600 bg-emerald-500/10' },
+  medium: { label: 'Medium', className: 'text-amber-600 bg-amber-500/10' },
   low: { label: 'Low', className: 'text-muted bg-muted/10' },
 }
 
@@ -85,7 +85,7 @@ export default async function ActivityPage() {
             {typeConfig.backlink.icon}
           </div>
           <div>
-            <p className="text-white text-xl font-bold">{backlinks}</p>
+            <p className="text-foreground text-xl font-bold">{backlinks}</p>
             <p className="text-muted text-xs">Backlinks</p>
           </div>
         </div>
@@ -94,16 +94,16 @@ export default async function ActivityPage() {
             {typeConfig.technical.icon}
           </div>
           <div>
-            <p className="text-white text-xl font-bold">{technical}</p>
+            <p className="text-foreground text-xl font-bold">{technical}</p>
             <p className="text-muted text-xs">Technical</p>
           </div>
         </div>
-        <div className="bg-card border border-violet-500/20 rounded-2xl p-4 flex items-center gap-3">
-          <div className="w-10 h-10 bg-violet-500/10 rounded-xl flex items-center justify-center text-violet-400">
+        <div className="bg-card border border-orange-500/20 rounded-2xl p-4 flex items-center gap-3">
+          <div className="w-10 h-10 bg-orange-500/10 rounded-xl flex items-center justify-center text-orange-600">
             {typeConfig.content.icon}
           </div>
           <div>
-            <p className="text-white text-xl font-bold">{content}</p>
+            <p className="text-foreground text-xl font-bold">{content}</p>
             <p className="text-muted text-xs">Content</p>
           </div>
         </div>
@@ -132,7 +132,7 @@ export default async function ActivityPage() {
                   <div className="flex-1 pb-4">
                     <div className="flex items-start justify-between gap-4 mb-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="text-white font-semibold text-sm">{item.title}</h4>
+                        <h4 className="text-foreground font-semibold text-sm">{item.title}</h4>
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${config.bg} ${config.color}`}>{config.label}</span>
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${impact.className}`}>{impact.label} Impact</span>
                       </div>

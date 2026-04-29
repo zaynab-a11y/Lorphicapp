@@ -88,7 +88,7 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
           </svg>
         </div>
         <div className="text-center">
-          <h3 className="text-white font-semibold text-lg mb-2">Connect Google Search Console</h3>
+          <h3 className="text-foreground font-semibold text-lg mb-2">Connect Google Search Console</h3>
           <p className="text-muted text-sm max-w-sm">
             {isAdmin
               ? 'Connect your Google account to pull live GSC data for all your clients.'
@@ -117,13 +117,13 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
   if (!gscSiteUrl) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-6">
-        <div className="w-16 h-16 bg-yellow-400/10 border border-yellow-400/20 rounded-2xl flex items-center justify-center text-yellow-400">
+        <div className="w-16 h-16 bg-amber-500/10 border border-amber-500/20 rounded-2xl flex items-center justify-center text-amber-600">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
           </svg>
         </div>
         <div className="text-center">
-          <h3 className="text-white font-semibold text-lg mb-2">Set Your GSC Property</h3>
+          <h3 className="text-foreground font-semibold text-lg mb-2">Set Your GSC Property</h3>
           <p className="text-muted text-sm max-w-sm">
             {isAdmin
               ? 'Enter the site URL exactly as it appears in Google Search Console.'
@@ -137,7 +137,7 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
               placeholder="https://yoursite.com/"
               value={siteUrlInput}
               onChange={(e) => setSiteUrlInput(e.target.value)}
-              className="flex-1 bg-card border border-border rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-muted/50 focus:outline-none focus:border-primary"
+              className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm placeholder:text-muted/50 focus:outline-none focus:border-primary"
             />
             <button
               onClick={handleSaveUrl}
@@ -171,12 +171,12 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
   if (error && !summary) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <div className="flex items-center gap-2 text-red-400 bg-red-400/10 border border-red-400/20 rounded-xl px-4 py-3 text-sm">
+        <div className="flex items-center gap-2 text-red-600 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm">
           {error}
         </div>
         {isAdmin && (
           <button onClick={handleDisconnect} disabled={disconnecting}
-            className="text-muted text-sm hover:text-white transition-colors">
+            className="text-muted text-sm hover:text-foreground transition-colors">
             Disconnect and reconnect Google
           </button>
         )}
@@ -195,8 +195,8 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
   return (
     <div>
       {isAdmin && (
-        <div className="flex items-center justify-between mb-6 bg-emerald-400/10 border border-emerald-400/20 rounded-xl px-4 py-3">
-          <div className="flex items-center gap-2 text-emerald-400 text-sm">
+        <div className="flex items-center justify-between mb-6 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
+          <div className="flex items-center gap-2 text-emerald-600 text-sm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
               <polyline points="22 4 12 14.01 9 11.01"/>
@@ -204,7 +204,7 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
             Google Search Console connected · {gscSiteUrl}
           </div>
           <button onClick={handleDisconnect} disabled={disconnecting}
-            className="text-muted text-xs hover:text-red-400 transition-colors">
+            className="text-muted text-xs hover:text-red-600 transition-colors">
             {disconnecting ? 'Disconnecting...' : 'Disconnect'}
           </button>
         </div>
@@ -242,20 +242,20 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
               </thead>
               <tbody className="divide-y divide-border">
                 {queries.map((row, idx) => (
-                  <tr key={row.query} className="hover:bg-white/2 transition-colors">
+                  <tr key={row.query} className="hover:bg-black/3 transition-colors">
                     <td className="py-3 pr-4">
                       <div className="flex items-center gap-3">
                         <span className="text-muted text-xs w-5 text-right">{idx + 1}</span>
-                        <span className="text-white font-medium">{row.query}</span>
+                        <span className="text-foreground font-medium">{row.query}</span>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-right text-primary font-semibold">{row.clicks.toLocaleString()}</td>
                     <td className="py-3 px-4 text-right text-muted">{row.impressions.toLocaleString()}</td>
                     <td className="py-3 px-4 text-right">
-                      <span className={row.ctr >= 8 ? 'text-emerald-400' : row.ctr >= 5 ? 'text-yellow-400' : 'text-red-400'}>{row.ctr}%</span>
+                      <span className={row.ctr >= 8 ? 'text-emerald-600' : row.ctr >= 5 ? 'text-amber-600' : 'text-red-600'}>{row.ctr}%</span>
                     </td>
                     <td className="py-3 pl-4 text-right">
-                      <span className={row.position <= 3 ? 'text-emerald-400 font-semibold' : row.position <= 10 ? 'text-primary' : 'text-muted'}>
+                      <span className={row.position <= 3 ? 'text-emerald-600 font-semibold' : row.position <= 10 ? 'text-primary' : 'text-muted'}>
                         {row.position.toFixed(1)}
                       </span>
                     </td>

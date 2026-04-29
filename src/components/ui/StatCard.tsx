@@ -12,8 +12,8 @@ interface StatCardProps {
 const colorMap = {
   primary: { bg: 'bg-primary/10', icon: 'text-primary', border: 'border-primary/20' },
   accent: { bg: 'bg-accent/10', icon: 'text-accent', border: 'border-accent/20' },
-  green: { bg: 'bg-emerald-500/10', icon: 'text-emerald-400', border: 'border-emerald-500/20' },
-  purple: { bg: 'bg-violet-500/10', icon: 'text-violet-400', border: 'border-violet-500/20' },
+  green: { bg: 'bg-emerald-500/10', icon: 'text-emerald-600', border: 'border-emerald-500/20' },
+  purple: { bg: 'bg-orange-500/10', icon: 'text-orange-600', border: 'border-orange-200' },
 }
 
 export default function StatCard({ title, value, change, changeLabel, icon, color = 'primary' }: StatCardProps) {
@@ -31,15 +31,15 @@ export default function StatCard({ title, value, change, changeLabel, icon, colo
         </div>
       </div>
 
-      <p className="text-white text-3xl font-bold mb-2">{value}</p>
+      <p className="text-foreground text-3xl font-bold mb-2">{value}</p>
 
       {change !== undefined && (
         <div className="flex items-center gap-1.5">
           <span
             className={clsx(
               'flex items-center gap-0.5 text-xs font-semibold px-1.5 py-0.5 rounded-md',
-              isPositive && 'text-emerald-400 bg-emerald-400/10',
-              isNegative && 'text-red-400 bg-red-400/10',
+              isPositive && 'text-emerald-600 bg-emerald-500/10',
+              isNegative && 'text-red-600 bg-red-500/10',
               isNeutral && 'text-muted bg-muted/10'
             )}
           >
