@@ -37,13 +37,18 @@ export async function GET(request: NextRequest) {
   }
 
   const service = createServiceClient()
-  await service.from('gsc_tokens').upsert({
+  const { error: upsertError } = await service.from('gsc_tokens').upsert({
     id: 1,
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token ?? null,
     expiry_date: tokens.expires_in ? Date.now() + tokens.expires_in * 1000 : null,
     updated_at: new Date().toISOString(),
   })
+
+  if (upsertError) {
+    console.error('Failed to save GSC tokens:', upsertError.message)
+    return NextResponse.redirect(`${appUrl}/gsc?error=token_save_failed`)
+  }
 
   return NextResponse.redirect(`${appUrl}/gsc?connected=true`)
 }

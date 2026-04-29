@@ -20,9 +20,12 @@ export default async function GscPage({ searchParams }: { searchParams: { connec
   const { data: tokenRow } = await service.from('gsc_tokens').select('access_token').eq('id', 1).single()
   const isConnected = !!tokenRow?.access_token
 
-  const initialError = searchParams.error
-    ? searchParams.error === 'google_auth_failed' ? 'Google authentication failed. Please try again.' : 'Something went wrong.'
-    : null
+  const errorMessages: Record<string, string> = {
+    google_auth_failed: 'Google authentication failed. Please try again.',
+    token_exchange_failed: 'Failed to exchange Google auth code for tokens. Check your GOOGLE_CLIENT_SECRET.',
+    token_save_failed: 'Connected to Google but failed to save tokens. The gsc_tokens table may not exist in Supabase — run the setup SQL.',
+  }
+  const initialError = searchParams.error ? (errorMessages[searchParams.error] ?? 'Something went wrong.') : null
 
   return (
     <DashboardLayout
