@@ -20,13 +20,13 @@ export default async function DashboardPage() {
     .eq('id', user.id)
     .single()
 
-  const { data: keywords } = await supabase
+  const { data: keywords } = await service
     .from('keywords')
     .select('id, keyword, position, prev_position, volume, difficulty')
     .eq('user_id', user.id)
     .order('position', { ascending: true })
 
-  const { data: activityCount } = await supabase
+  const { data: activityCount } = await service
     .from('activity_feed')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)

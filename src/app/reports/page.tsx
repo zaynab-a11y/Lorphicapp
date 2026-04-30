@@ -63,7 +63,7 @@ export default async function ReportsPage() {
     .eq('id', user.id)
     .single()
 
-  const { data: reports } = await supabase
+  const { data: reports } = await service
     .from('reports')
     .select('*')
     .eq('user_id', user.id)

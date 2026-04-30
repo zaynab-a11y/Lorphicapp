@@ -17,7 +17,7 @@ export default async function RankingsPage() {
     .eq('id', user.id)
     .single()
 
-  const { data: keywords } = await supabase
+  const { data: keywords } = await service
     .from('keywords')
     .select('*')
     .eq('user_id', user.id)

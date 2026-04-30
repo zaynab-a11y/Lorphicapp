@@ -64,7 +64,7 @@ export default async function ActivityPage() {
     .eq('id', user.id)
     .single()
 
-  const { data: activityData } = await supabase
+  const { data: activityData } = await service
     .from('activity_feed')
     .select('*')
     .eq('user_id', user.id)
