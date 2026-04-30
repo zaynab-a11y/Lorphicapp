@@ -3,14 +3,15 @@ export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 export default async function RankingsPage() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const service = createServiceClient()
+  const { data: profile } = await service
     .from('profiles')
     .select('name, email')
     .eq('id', user.id)

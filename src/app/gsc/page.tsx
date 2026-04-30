@@ -23,7 +23,9 @@ export default async function GscPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  // Use service client to bypass RLS on profiles
+  const service = createServiceClient()
+  const { data: profile } = await service
     .from('profiles')
     .select('name, email, role')
     .eq('id', user.id)
@@ -31,8 +33,6 @@ export default async function GscPage({
 
   const isAdmin = profile?.role === 'admin'
 
-  // Check if THIS user has connected their Google account
-  const service = createServiceClient()
   const { data: tokenRow } = await service
     .from('gsc_tokens')
     .select('access_token, gsc_site_url')

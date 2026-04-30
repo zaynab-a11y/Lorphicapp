@@ -5,7 +5,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout'
 import StatCard from '@/components/ui/StatCard'
 import Card from '@/components/ui/Card'
 import TrafficChart from '@/components/charts/TrafficChart'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { trafficChartData } from '@/lib/mockData'
 
 export default async function DashboardPage() {
@@ -13,7 +13,8 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const service = createServiceClient()
+  const { data: profile } = await service
     .from('profiles')
     .select('name, email, role')
     .eq('id', user.id)

@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import ReportDownloadButton from './ReportDownloadButton'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 const colorMap: Record<string, { icon: string; bg: string; border: string; btn: string }> = {
   full: { icon: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20', btn: 'bg-primary hover:bg-primary/90' },
@@ -56,7 +56,8 @@ export default async function ReportsPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
+  const service = createServiceClient()
+  const { data: profile } = await service
     .from('profiles')
     .select('name, email')
     .eq('id', user.id)
