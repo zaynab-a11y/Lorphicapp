@@ -5,8 +5,6 @@ export const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/
 
 export const GSC_SCOPES = [
   'https://www.googleapis.com/auth/webmasters.readonly',
-  'openid',
-  'email',
 ]
 
 export function createOAuthClient() {
