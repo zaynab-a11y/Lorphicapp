@@ -43,10 +43,11 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
   const [error, setError] = useState(initialError ?? '')
   const [disconnecting, setDisconnecting] = useState(false)
 
+  // Fetch GSC data once connected + site URL is known
   useEffect(() => {
     if (!isConnected || !gscSiteUrl) return
     setLoading(true)
-    fetch(`/api/gsc/data?siteUrl=${encodeURIComponent(gscSiteUrl)}`)
+    fetch(`/api/gsc-data?siteUrl=${encodeURIComponent(gscSiteUrl)}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.error) { setError(data.error); return }
@@ -54,7 +55,7 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
         setChart(data.chart ?? [])
         setQueries(data.queries ?? [])
       })
-      .catch(() => setError('Failed to load GSC data'))
+      .catch(() => setError('Network error — failed to load GSC data.'))
       .finally(() => setLoading(false))
   }, [isConnected, gscSiteUrl])
 
@@ -64,21 +65,29 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
     window.location.reload()
   }
 
+  // Site URL input state (shown when connected but no URL saved)
   const [siteUrlInput, setSiteUrlInput] = useState('')
   const [savingUrl, setSavingUrl] = useState(false)
 
   const handleSaveUrl = async () => {
-    if (!siteUrlInput) return
+    const trimmed = siteUrlInput.trim()
+    if (!trimmed) return
     setSavingUrl(true)
-    await fetch('/api/admin/users', {
-      method: 'PATCH',
+    const res = await fetch('/api/gsc/site-url', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: 'self', gsc_site_url: siteUrlInput }),
+      body: JSON.stringify({ siteUrl: trimmed }),
     })
+    const data = await res.json()
+    if (data.error) {
+      setError(data.error)
+      setSavingUrl(false)
+      return
+    }
     window.location.reload()
   }
 
-  // Not connected — show connect button (admin only)
+  // ─── NOT CONNECTED ────────────────────────────────────────────────────────
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-6">
@@ -87,14 +96,22 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
             <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9"/>
           </svg>
         </div>
+
         <div className="text-center">
           <h3 className="text-foreground font-semibold text-lg mb-2">Connect Google Search Console</h3>
           <p className="text-muted text-sm max-w-sm">
             {isAdmin
-              ? 'Connect your Google account to pull live GSC data for all your clients.'
+              ? 'Connect your Google account to pull live Search Console data.'
               : 'Your administrator needs to connect Google Search Console to display your data.'}
           </p>
         </div>
+
+        {error && (
+          <div className="flex items-center gap-2 text-red-600 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm max-w-md text-center">
+            {error}
+          </div>
+        )}
+
         {isAdmin && (
           <a
             href="/api/auth/google"
@@ -113,7 +130,7 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
     )
   }
 
-  // Connected but no site URL
+  // ─── CONNECTED BUT NO SITE URL ─────────────────────────────────────────────
   if (!gscSiteUrl) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-6">
@@ -123,36 +140,42 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
           </svg>
         </div>
         <div className="text-center">
-          <h3 className="text-foreground font-semibold text-lg mb-2">Set Your GSC Property</h3>
+          <h3 className="text-foreground font-semibold text-lg mb-1">Set Your GSC Property</h3>
           <p className="text-muted text-sm max-w-sm">
-            {isAdmin
-              ? 'Enter the site URL exactly as it appears in Google Search Console.'
-              : 'Your administrator needs to set your GSC property URL.'}
+            Enter the property URL exactly as it appears in Google Search Console.
+          </p>
+          <p className="text-muted/60 text-xs mt-1">
+            Domain property: <code className="bg-border px-1 rounded">sc-domain:example.com</code>
+            &nbsp;· URL prefix: <code className="bg-border px-1 rounded">https://example.com/</code>
           </p>
         </div>
-        {isAdmin && (
-          <div className="flex items-center gap-2 w-full max-w-sm">
-            <input
-              type="text"
-              placeholder="sc-domain:example.com or https://example.com/"
-              value={siteUrlInput}
-              onChange={(e) => setSiteUrlInput(e.target.value)}
-              className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm placeholder:text-muted/50 focus:outline-none focus:border-primary"
-            />
-            <button
-              onClick={handleSaveUrl}
-              disabled={savingUrl || !siteUrlInput}
-              className="bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50"
-            >
-              {savingUrl ? 'Saving...' : 'Save'}
-            </button>
-          </div>
+
+        {error && (
+          <p className="text-red-600 text-sm">{error}</p>
         )}
+
+        <div className="flex items-center gap-2 w-full max-w-sm">
+          <input
+            type="text"
+            placeholder="sc-domain:example.com"
+            value={siteUrlInput}
+            onChange={(e) => setSiteUrlInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSaveUrl()}
+            className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-foreground text-sm placeholder:text-muted/50 focus:outline-none focus:border-primary"
+          />
+          <button
+            onClick={handleSaveUrl}
+            disabled={savingUrl || !siteUrlInput.trim()}
+            className="bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-primary/90 transition-all disabled:opacity-50 whitespace-nowrap"
+          >
+            {savingUrl ? 'Saving…' : 'Save'}
+          </button>
+        </div>
       </div>
     )
   }
 
-  // Loading
+  // ─── LOADING ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -161,72 +184,87 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
           </svg>
-          Loading GSC data...
+          Loading GSC data…
         </div>
       </div>
     )
   }
 
-  // Error
+  // ─── ERROR (no data loaded) ────────────────────────────────────────────────
   if (error && !summary) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <div className="flex items-center gap-2 text-red-600 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm">
+        <div className="flex items-center gap-2 text-red-600 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm max-w-lg text-center">
           {error}
         </div>
-        {isAdmin && (
-          <button onClick={handleDisconnect} disabled={disconnecting}
-            className="text-muted text-sm hover:text-foreground transition-colors">
-            Disconnect and reconnect Google
-          </button>
-        )}
+        <button
+          onClick={handleDisconnect}
+          disabled={disconnecting}
+          className="text-muted text-sm hover:text-red-600 transition-colors"
+        >
+          {disconnecting ? 'Disconnecting…' : 'Disconnect and reconnect Google'}
+        </button>
       </div>
     )
   }
 
-  const chartData = chart.map((row) => ({
-    date: row.date,
-    clicks: row.clicks,
-    impressions: row.impressions,
-    ctr: row.ctr,
-    position: row.position,
-  }))
-
+  // ─── DATA VIEW ─────────────────────────────────────────────────────────────
   return (
     <div>
-      {isAdmin && (
-        <div className="flex items-center justify-between mb-6 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
-          <div className="flex items-center gap-2 text-emerald-600 text-sm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-              <polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-            Google Search Console connected · {gscSiteUrl}
-          </div>
-          <button onClick={handleDisconnect} disabled={disconnecting}
-            className="text-muted text-xs hover:text-red-600 transition-colors">
-            {disconnecting ? 'Disconnecting...' : 'Disconnect'}
-          </button>
+      {/* Connected banner */}
+      <div className="flex items-center justify-between mb-6 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
+        <div className="flex items-center gap-2 text-emerald-600 text-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          Connected · <span className="font-mono">{gscSiteUrl}</span>
         </div>
-      )}
-
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-        <StatCard title="Total Clicks" value={(summary?.clicks ?? 0).toLocaleString()} color="primary"
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 15l6.5-6.5M22 8v6h-6M9 15H3v-6h6M3 9l6.5 6.5"/></svg>} />
-        <StatCard title="Impressions" value={(summary?.impressions ?? 0).toLocaleString()} color="accent"
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>} />
-        <StatCard title="CTR" value={`${summary?.ctr ?? 0}%`} color="green"
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>} />
-        <StatCard title="Avg Position" value={summary?.avgPosition?.toString() ?? '—'} color="purple"
-          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>} />
+        <button
+          onClick={handleDisconnect}
+          disabled={disconnecting}
+          className="text-muted text-xs hover:text-red-600 transition-colors"
+        >
+          {disconnecting ? 'Disconnecting…' : 'Disconnect'}
+        </button>
       </div>
 
-      {chartData.length > 0 && (
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <StatCard
+          title="Total Clicks"
+          value={(summary?.clicks ?? 0).toLocaleString()}
+          color="primary"
+          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 15l6.5-6.5M22 8v6h-6M9 15H3v-6h6M3 9l6.5 6.5"/></svg>}
+        />
+        <StatCard
+          title="Impressions"
+          value={(summary?.impressions ?? 0).toLocaleString()}
+          color="accent"
+          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>}
+        />
+        <StatCard
+          title="Avg CTR"
+          value={`${summary?.ctr ?? 0}%`}
+          color="green"
+          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>}
+        />
+        <StatCard
+          title="Avg Position"
+          value={summary?.avgPosition?.toString() ?? '—'}
+          color="purple"
+          icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>}
+        />
+      </div>
+
+      {/* Chart */}
+      {chart.length > 0 && (
         <Card title="Performance Trends" subtitle="Last 28 days" className="mb-6">
-          <GscChart data={chartData} />
+          <GscChart data={chart} />
         </Card>
       )}
 
+      {/* Top queries table */}
       {queries.length > 0 && (
         <Card title="Top Queries" subtitle="Queries driving the most traffic">
           <div className="overflow-x-auto">
@@ -245,14 +283,16 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
                   <tr key={row.query} className="hover:bg-black/3 transition-colors">
                     <td className="py-3 pr-4">
                       <div className="flex items-center gap-3">
-                        <span className="text-muted text-xs w-5 text-right">{idx + 1}</span>
+                        <span className="text-muted text-xs w-5 text-right flex-shrink-0">{idx + 1}</span>
                         <span className="text-foreground font-medium">{row.query}</span>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-right text-primary font-semibold">{row.clicks.toLocaleString()}</td>
                     <td className="py-3 px-4 text-right text-muted">{row.impressions.toLocaleString()}</td>
                     <td className="py-3 px-4 text-right">
-                      <span className={row.ctr >= 8 ? 'text-emerald-600' : row.ctr >= 5 ? 'text-amber-600' : 'text-red-600'}>{row.ctr}%</span>
+                      <span className={row.ctr >= 8 ? 'text-emerald-600' : row.ctr >= 5 ? 'text-amber-600' : 'text-muted'}>
+                        {row.ctr}%
+                      </span>
                     </td>
                     <td className="py-3 pl-4 text-right">
                       <span className={row.position <= 3 ? 'text-emerald-600 font-semibold' : row.position <= 10 ? 'text-primary' : 'text-muted'}>
