@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 
@@ -14,11 +14,21 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children, title, subtitle, user }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Prevent body scroll when sidebar overlay is open on mobile
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [sidebarOpen])
+
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="flex min-h-dvh bg-background">
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -32,7 +42,7 @@ export default function DashboardLayout({ children, title, subtitle, user }: Das
           user={user}
           onMenuClick={() => setSidebarOpen(true)}
         />
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-auto overscroll-none">
           {children}
         </main>
       </div>
