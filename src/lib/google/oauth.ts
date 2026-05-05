@@ -1,12 +1,10 @@
 import { google } from 'googleapis'
 import { createServiceClient } from '@/lib/supabase/server'
 
-export const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/callback`
+export const REDIRECT_URI = `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/google/callback`
 
 export const GSC_SCOPES = [
   'https://www.googleapis.com/auth/webmasters.readonly',
-  'openid',
-  'email',
 ]
 
 export function createOAuthClient() {
