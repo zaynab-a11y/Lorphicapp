@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { authedFetch } from '@/lib/authed-fetch'
+import { useToast } from '@/components/ui/Toast'
 
 interface User { id: string; name: string; email: string }
 interface BFile { id: string; title: string; file_url: string; file_type: string; file_size: number; created_at: string }
@@ -35,6 +36,7 @@ const ic = 'bg-background border border-border rounded-xl px-3 py-2 text-foregro
 
 export default function BacklinksUpload({ users }: Props) {
   const router = useRouter()
+  const { toast } = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [userId, setUserId] = useState('')
   const [title, setTitle] = useState('')
@@ -67,9 +69,10 @@ export default function BacklinksUpload({ users }: Props) {
       form.append('title', title || file.name)
       const res = await authedFetch('/api/admin/backlinks/upload', { method: 'POST', body: form })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Upload failed'); return }
+      if (!res.ok) { setError(data.error ?? 'Upload failed'); toast(data.error ?? 'Upload failed', 'error'); return }
       setSuccess(true); setTitle(''); setFile(null)
       if (fileRef.current) fileRef.current.value = ''
+      toast('File uploaded successfully', 'success')
       fetchFiles(userId); router.refresh()
       setTimeout(() => setSuccess(false), 3000)
     } finally { setUploading(false) }
@@ -82,6 +85,7 @@ export default function BacklinksUpload({ users }: Props) {
       body: JSON.stringify({ id }),
     })
     setFiles((p) => p.filter((f) => f.id !== id))
+    toast('File deleted', 'info')
     router.refresh()
   }
 

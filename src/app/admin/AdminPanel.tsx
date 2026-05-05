@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
+import { useToast } from '@/components/ui/Toast'
 
 interface Profile {
   id: string
@@ -34,6 +35,7 @@ const TrashIcon = () => (
 )
 
 export default function AdminPanel() {
+  const { toast } = useToast()
   const [tab, setTab] = useState<'users' | 'rankings'>('users')
 
   // Users state
@@ -97,9 +99,10 @@ export default function AdminPanel() {
         body: JSON.stringify(newUser),
       })
       const data = await res.json()
-      if (data.error) { setError(data.error); return }
+      if (data.error) { setError(data.error); toast(data.error, 'error'); return }
       setNewUser({ email: '', name: '', password: '', role: 'client' })
       setShowAddUser(false)
+      toast(`User ${newUser.name} created successfully`, 'success')
       fetchUsers()
     } finally {
       setSaving(false)
@@ -107,11 +110,13 @@ export default function AdminPanel() {
   }
 
   const handleDeleteUser = async (id: string) => {
+    const user = users.find((u) => u.id === id)
     await fetch('/api/admin/users', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status: 'inactive' }),
     })
+    toast(`${user?.name ?? 'User'} deactivated`, 'info')
     fetchUsers()
   }
 
@@ -122,6 +127,7 @@ export default function AdminPanel() {
       body: JSON.stringify({ id: userId, gsc_site_url: gscInputs[userId] ?? '' }),
     })
     setEditingGsc(null)
+    toast('GSC property saved', 'success')
     fetchUsers()
   }
 

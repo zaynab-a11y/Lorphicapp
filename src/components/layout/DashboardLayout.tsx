@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
+import { ToastProvider } from '@/components/ui/Toast'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -25,6 +26,7 @@ export default function DashboardLayout({ children, title, subtitle, user }: Das
   }, [sidebarOpen])
 
   return (
+    <ToastProvider>
     <div className="flex min-h-dvh bg-background">
       {sidebarOpen && (
         <div
@@ -47,5 +49,6 @@ export default function DashboardLayout({ children, title, subtitle, user }: Das
         </main>
       </div>
     </div>
+    </ToastProvider>
   )
 }

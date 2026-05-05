@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { authedFetch } from '@/lib/authed-fetch'
+import { useToast } from '@/components/ui/Toast'
 
 interface User { id: string; name: string; email: string }
 interface Screenshot { id: string; title: string | null; file_url: string; created_at: string }
@@ -21,6 +22,7 @@ const ic = 'bg-background border border-border rounded-xl px-3 py-2 text-foregro
 
 export default function RankingsUpload({ users }: Props) {
   const router = useRouter()
+  const { toast } = useToast()
   const fileRef = useRef<HTMLInputElement>(null)
   const [userId, setUserId] = useState('')
   const [title, setTitle] = useState('')
@@ -54,9 +56,10 @@ export default function RankingsUpload({ users }: Props) {
       form.append('title', title)
       const res = await authedFetch('/api/admin/rankings/upload', { method: 'POST', body: form })
       const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Upload failed'); return }
+      if (!res.ok) { setError(data.error ?? 'Upload failed'); toast(data.error ?? 'Upload failed', 'error'); return }
       setSuccess(true); setTitle(''); setFile(null)
       if (fileRef.current) fileRef.current.value = ''
+      toast('Screenshot uploaded successfully', 'success')
       fetchShots(userId); router.refresh()
       setTimeout(() => setSuccess(false), 3000)
     } finally { setUploading(false) }
@@ -69,6 +72,7 @@ export default function RankingsUpload({ users }: Props) {
       body: JSON.stringify({ id }),
     })
     setScreenshots((p) => p.filter((s) => s.id !== id))
+    toast('Screenshot deleted', 'info')
     router.refresh()
   }
 
