@@ -7,10 +7,9 @@ async function requireAdmin() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  const service = createServiceClient()
-  const { data: profile } = await service.from('profiles').select('role').eq('id', user.id).single()
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
   if (profile?.role !== 'admin') return null
-  return { user, service }
+  return { user, service: createServiceClient() }
 }
 
 export async function GET(request: NextRequest) {
