@@ -3,13 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --primary: #00C4B4;
+  --primary: #00CEC4;
   --accent: #F97316;
   --bg: #FFFFFF;
-  --card: #F0FFFE;
-  --border: #B2EFEB;
+  --card: #FFFFFF;
+  --border: #E2E8F0;
   --text: #0F172A;
   --muted: #64748B;
+  --sidebar: #111827;
 }
 
 * {
@@ -29,14 +30,14 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #F0FFFE;
+  background: #F1F5F9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #7DDDD6;
+  background: #CBD5E1;
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #00C4B4;
+  background: #00CEC4;
 }
 
 /* Smooth transitions */
@@ -46,6 +47,6 @@ a, button {
 
 /* Focus styles */
 :focus-visible {
-  outline: 2px solid #0D9488;
+  outline: 2px solid #00CEC4;
   outline-offset: 2px;
 }

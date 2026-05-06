@@ -8,13 +8,14 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#00C4B4',
+        primary: '#00CEC4',
         accent: '#F97316',
         background: '#FFFFFF',
-        card: '#F0FFFE',
-        border: '#B2EFEB',
+        card: '#FFFFFF',
+        border: '#E2E8F0',
         muted: '#64748B',
         foreground: '#0F172A',
+        sidebar: '#111827',
       },
       borderRadius: {
         'xl': '12px',
@@ -22,8 +23,8 @@ module.exports = {
         '3xl': '24px',
       },
       boxShadow: {
-        'card': '0 2px 16px rgba(0,196,180,0.08)',
-        'glow': '0 0 20px rgba(0,196,180,0.30)',
+        'card': '0 1px 12px rgba(0,0,0,0.06)',
+        'glow': '0 0 20px rgba(0,206,196,0.30)',
       },
     },
   },
