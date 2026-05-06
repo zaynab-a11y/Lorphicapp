@@ -5,6 +5,7 @@ import Card from '@/components/ui/Card'
 import Badge from '@/components/ui/Badge'
 import Button from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
+import { authedFetch } from '@/lib/authed-fetch'
 
 interface Profile {
   id: string
@@ -62,7 +63,7 @@ export default function AdminPanel() {
   const fetchUsers = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/admin/users')
+      const res = await authedFetch('/api/admin/users')
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to load')
       setUsers(data.users ?? [])
@@ -79,7 +80,7 @@ export default function AdminPanel() {
     if (!userId) { setScreenshots([]); return }
     setLoadingScreenshots(true)
     try {
-      const res = await fetch(`/api/admin/rankings?userId=${userId}`)
+      const res = await authedFetch(`/api/admin/rankings?userId=${userId}`)
       const data = await res.json()
       setScreenshots(data.screenshots ?? [])
     } finally {
@@ -93,7 +94,7 @@ export default function AdminPanel() {
     if (!newUser.email || !newUser.name || !newUser.password) return
     setSaving(true)
     try {
-      const res = await fetch('/api/admin/create-user', {
+      const res = await authedFetch('/api/admin/create-user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser),
@@ -111,7 +112,7 @@ export default function AdminPanel() {
 
   const handleDeleteUser = async (id: string) => {
     const user = users.find((u) => u.id === id)
-    await fetch('/api/admin/users', {
+    await authedFetch('/api/admin/users', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status: 'inactive' }),
@@ -121,7 +122,7 @@ export default function AdminPanel() {
   }
 
   const handleSaveGsc = async (userId: string) => {
-    await fetch('/api/admin/users', {
+    await authedFetch('/api/admin/users', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id: userId, gsc_site_url: gscInputs[userId] ?? '' }),
@@ -143,7 +144,7 @@ export default function AdminPanel() {
       form.append('file', rankingFile)
       form.append('userId', rankingUserId)
       form.append('title', rankingTitle)
-      const res = await fetch('/api/admin/rankings/upload', { method: 'POST', body: form })
+      const res = await authedFetch('/api/admin/rankings/upload', { method: 'POST', body: form })
       const data = await res.json()
       if (!res.ok) { setUploadError(data.error ?? 'Upload failed'); return }
       setRankingTitle('')
@@ -156,7 +157,7 @@ export default function AdminPanel() {
   }
 
   const handleDeleteScreenshot = async (id: string) => {
-    await fetch('/api/admin/rankings', {
+    await authedFetch('/api/admin/rankings', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id }),
