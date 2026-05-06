@@ -9,7 +9,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode
   title: string
   subtitle?: string
-  user?: { email?: string; name?: string } | null
+  user?: { email?: string; name?: string; role?: string; visibleTabs?: string[] | null } | null
 }
 
 export default function DashboardLayout({ children, title, subtitle, user }: DashboardLayoutProps) {
@@ -35,7 +35,7 @@ export default function DashboardLayout({ children, title, subtitle, user }: Das
         />
       )}
 
-      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} role={user?.role} visibleTabs={user?.visibleTabs} />
 
       <div className="flex-1 flex flex-col md:ml-64 min-w-0">
         <TopBar

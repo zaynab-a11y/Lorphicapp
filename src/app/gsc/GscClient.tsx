@@ -197,13 +197,15 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
         <div className="flex items-center gap-2 text-red-600 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-sm max-w-lg text-center">
           {error}
         </div>
-        <button
-          onClick={handleDisconnect}
-          disabled={disconnecting}
-          className="text-muted text-sm hover:text-red-600 transition-colors"
-        >
-          {disconnecting ? 'Disconnecting…' : 'Disconnect and reconnect Google'}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={handleDisconnect}
+            disabled={disconnecting}
+            className="text-muted text-sm hover:text-red-600 transition-colors"
+          >
+            {disconnecting ? 'Disconnecting…' : 'Disconnect and reconnect Google'}
+          </button>
+        )}
       </div>
     )
   }
@@ -220,13 +222,15 @@ export default function GscClient({ isAdmin, isConnected, gscSiteUrl, initialErr
           </svg>
           Connected · <span className="font-mono">{gscSiteUrl}</span>
         </div>
-        <button
-          onClick={handleDisconnect}
-          disabled={disconnecting}
-          className="text-muted text-xs hover:text-red-600 transition-colors"
-        >
-          {disconnecting ? 'Disconnecting…' : 'Disconnect'}
-        </button>
+        {isAdmin && (
+          <button
+            onClick={handleDisconnect}
+            disabled={disconnecting}
+            className="text-muted text-xs hover:text-red-600 transition-colors"
+          >
+            {disconnecting ? 'Disconnecting…' : 'Disconnect'}
+          </button>
+        )}
       </div>
 
       {/* Stat cards */}

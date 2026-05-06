@@ -18,7 +18,7 @@ export default async function BacklinksPage() {
 
   const service = createServiceClient()
   const [{ data: profile }, { data: clientUsers }, { data: myFiles }] = await Promise.all([
-    service.from('profiles').select('name, email, role').eq('id', user.id).single(),
+    service.from('profiles').select('name, email, role, visible_tabs').eq('id', user.id).single(),
     service.from('profiles').select('id, name, email').eq('role', 'client').order('name'),
     service.from('backlink_files').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
   ])
@@ -30,7 +30,7 @@ export default async function BacklinksPage() {
     <DashboardLayout
       title="Backlinks"
       subtitle={isAdmin ? 'Upload and manage client backlink reports' : 'Your backlink reports'}
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '', role: profile?.role ?? '', visibleTabs: profile?.visible_tabs ?? null }}
     >
       {isAdmin ? (
         <BacklinksUpload users={clientUsers ?? []} />

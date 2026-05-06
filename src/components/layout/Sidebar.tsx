@@ -8,10 +8,13 @@ import clsx from 'clsx'
 interface SidebarProps {
   isOpen?: boolean
   onClose?: () => void
+  role?: string
+  visibleTabs?: string[] | null
 }
 
-const navItems = [
+const CLIENT_NAV = [
   {
+    key: 'dashboard',
     href: '/dashboard',
     label: 'Dashboard',
     icon: (
@@ -22,6 +25,7 @@ const navItems = [
     ),
   },
   {
+    key: 'gsc',
     href: '/gsc',
     label: 'GSC Updates',
     icon: (
@@ -31,6 +35,7 @@ const navItems = [
     ),
   },
   {
+    key: 'rankings',
     href: '/rankings',
     label: 'Rankings',
     icon: (
@@ -40,6 +45,7 @@ const navItems = [
     ),
   },
   {
+    key: 'backlinks',
     href: '/backlinks',
     label: 'Backlinks',
     icon: (
@@ -50,6 +56,7 @@ const navItems = [
     ),
   },
   {
+    key: 'activity',
     href: '/activity',
     label: 'Activity',
     icon: (
@@ -59,6 +66,7 @@ const navItems = [
     ),
   },
   {
+    key: 'reports',
     href: '/reports',
     label: 'Reports',
     icon: (
@@ -69,18 +77,20 @@ const navItems = [
       </svg>
     ),
   },
-  {
-    href: '/admin',
-    label: 'Admin',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-    ),
-  },
 ]
 
-export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
+const ADMIN_NAV = {
+  key: 'admin',
+  href: '/admin',
+  label: 'Admin',
+  icon: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+  ),
+}
+
+export default function Sidebar({ isOpen = false, onClose, role, visibleTabs }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
@@ -89,6 +99,13 @@ export default function Sidebar({ isOpen = false, onClose }: SidebarProps) {
     await supabase.auth.signOut()
     router.push('/login')
   }
+
+  const isAdmin = role === 'admin'
+
+  // For clients: filter by visibleTabs (null = all visible)
+  const navItems = isAdmin
+    ? [...CLIENT_NAV, ADMIN_NAV]
+    : CLIENT_NAV.filter((item) => !visibleTabs || visibleTabs.includes(item.key))
 
   return (
     <aside

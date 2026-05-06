@@ -13,7 +13,7 @@ export default async function AdminPage() {
   const service = createServiceClient()
   const { data: profile } = await service
     .from('profiles')
-    .select('name, email, role')
+    .select('name, email, role, visible_tabs')
     .eq('id', user.id)
     .single()
 
@@ -23,7 +23,7 @@ export default async function AdminPage() {
     <DashboardLayout
       title="Admin Panel"
       subtitle="Manage users and keyword assignments"
-      user={{ email: profile.email, name: profile.name }}
+      user={{ email: profile.email, name: profile.name, role: profile.role, visibleTabs: profile.visible_tabs ?? null }}
     >
       <AdminPanel />
     </DashboardLayout>

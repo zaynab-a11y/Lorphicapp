@@ -16,7 +16,7 @@ export default async function DashboardPage() {
   const service = createServiceClient()
   const { data: profile } = await service
     .from('profiles')
-    .select('name, email, role')
+    .select('name, email, role, visible_tabs')
     .eq('id', user.id)
     .single()
 
@@ -42,7 +42,7 @@ export default async function DashboardPage() {
     <DashboardLayout
       title="Dashboard"
       subtitle="Welcome back — here's your SEO overview"
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '', role: profile?.role ?? '', visibleTabs: profile?.visible_tabs ?? null }}
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <StatCard

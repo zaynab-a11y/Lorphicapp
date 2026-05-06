@@ -27,7 +27,7 @@ export default async function GscPage({
   const service = createServiceClient()
   const { data: profile } = await service
     .from('profiles')
-    .select('name, email, role')
+    .select('name, email, role, visible_tabs')
     .eq('id', user.id)
     .single()
 
@@ -50,7 +50,7 @@ export default async function GscPage({
     <DashboardLayout
       title="GSC Updates"
       subtitle="Google Search Console performance data"
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '', role: profile?.role ?? '', visibleTabs: profile?.visible_tabs ?? null }}
     >
       <GscClient
         isAdmin={isAdmin}

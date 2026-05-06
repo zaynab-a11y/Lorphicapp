@@ -18,11 +18,12 @@ export async function PATCH(request: NextRequest) {
   const ctx = await requireAdmin(request)
   if (!ctx) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { id, status, role, gsc_site_url } = await request.json()
-  const updates: Record<string, string> = {}
+  const { id, status, role, gsc_site_url, visible_tabs } = await request.json()
+  const updates: Record<string, unknown> = {}
   if (status) updates.status = status
   if (role) updates.role = role
   if (gsc_site_url !== undefined) updates.gsc_site_url = gsc_site_url
+  if (visible_tabs !== undefined) updates.visible_tabs = visible_tabs
 
   const targetId = id === 'self' ? ctx.userId : id
   const { error } = await ctx.service.from('profiles').update(updates).eq('id', targetId)

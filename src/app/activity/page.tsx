@@ -60,7 +60,7 @@ export default async function ActivityPage() {
   const service = createServiceClient()
   const { data: profile } = await service
     .from('profiles')
-    .select('name, email')
+    .select('name, email, role, visible_tabs')
     .eq('id', user.id)
     .single()
 
@@ -79,7 +79,7 @@ export default async function ActivityPage() {
     <DashboardLayout
       title="Activity Feed"
       subtitle="All SEO updates and improvements"
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '', role: profile?.role ?? '', visibleTabs: profile?.visible_tabs ?? null }}
     >
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">

@@ -59,7 +59,7 @@ export default async function ReportsPage() {
   const service = createServiceClient()
   const { data: profile } = await service
     .from('profiles')
-    .select('name, email')
+    .select('name, email, role, visible_tabs')
     .eq('id', user.id)
     .single()
 
@@ -76,7 +76,7 @@ export default async function ReportsPage() {
     <DashboardLayout
       title="Reports"
       subtitle="Download your SEO performance reports"
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '', role: profile?.role ?? '', visibleTabs: profile?.visible_tabs ?? null }}
     >
       {availableTypes.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

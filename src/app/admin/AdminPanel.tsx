@@ -15,6 +15,7 @@ interface Profile {
   status: string
   created_at: string
   gsc_site_url?: string | null
+  visible_tabs?: string[] | null
 }
 
 interface Screenshot {
@@ -23,6 +24,17 @@ interface Screenshot {
   title: string | null
   file_url: string
   created_at: string
+}
+
+const ALL_TABS = ['dashboard', 'gsc', 'rankings', 'backlinks', 'activity', 'reports'] as const
+type TabKey = typeof ALL_TABS[number]
+const TAB_LABELS: Record<TabKey, string> = {
+  dashboard: 'Dashboard',
+  gsc: 'GSC Updates',
+  rankings: 'Rankings',
+  backlinks: 'Backlinks',
+  activity: 'Activity',
+  reports: 'Reports',
 }
 
 const inputClass = 'bg-background border border-border rounded-xl px-3 py-2 text-foreground text-sm placeholder:text-muted/50 focus:outline-none focus:border-primary w-full'
@@ -35,11 +47,23 @@ const TrashIcon = () => (
   </svg>
 )
 
+function Toggle({ checked, onChange }: { checked: boolean; onChange: () => void }) {
+  return (
+    <button
+      onClick={onChange}
+      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors flex-shrink-0 ${checked ? 'bg-primary' : 'bg-border'}`}
+    >
+      <span
+        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${checked ? 'translate-x-4.5' : 'translate-x-0.5'}`}
+      />
+    </button>
+  )
+}
+
 export default function AdminPanel() {
   const { toast } = useToast()
   const [tab, setTab] = useState<'users' | 'rankings'>('users')
 
-  // Users state
   const [users, setUsers] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -48,8 +72,8 @@ export default function AdminPanel() {
   const [saving, setSaving] = useState(false)
   const [editingGsc, setEditingGsc] = useState<string | null>(null)
   const [gscInputs, setGscInputs] = useState<Record<string, string>>({})
+  const [expandedTabsUser, setExpandedTabsUser] = useState<string | null>(null)
 
-  // Rankings state
   const [rankingUserId, setRankingUserId] = useState('')
   const [rankingTitle, setRankingTitle] = useState('')
   const [rankingFile, setRankingFile] = useState<File | null>(null)
@@ -111,13 +135,13 @@ export default function AdminPanel() {
   }
 
   const handleDeleteUser = async (id: string) => {
-    const user = users.find((u) => u.id === id)
+    const u = users.find((u) => u.id === id)
     await authedFetch('/api/admin/users', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ id, status: 'inactive' }),
     })
-    toast(`${user?.name ?? 'User'} deactivated`, 'info')
+    toast(`${u?.name ?? 'User'} deactivated`, 'info')
     fetchUsers()
   }
 
@@ -132,13 +156,25 @@ export default function AdminPanel() {
     fetchUsers()
   }
 
+  const handleToggleTab = async (userId: string, tabKey: TabKey) => {
+    const u = users.find((u) => u.id === userId)
+    if (!u) return
+    const current = u.visible_tabs ?? [...ALL_TABS]
+    const updated = current.includes(tabKey)
+      ? current.filter((t) => t !== tabKey)
+      : [...current, tabKey]
+    // Optimistic update
+    setUsers((prev) => prev.map((x) => x.id === userId ? { ...x, visible_tabs: updated } : x))
+    await authedFetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: userId, visible_tabs: updated }),
+    })
+  }
+
   const handleUpload = async () => {
-    if (!rankingFile || !rankingUserId) {
-      setUploadError('Select a user and a file first.')
-      return
-    }
-    setUploading(true)
-    setUploadError('')
+    if (!rankingFile || !rankingUserId) { setUploadError('Select a user and a file first.'); return }
+    setUploading(true); setUploadError('')
     try {
       const form = new FormData()
       form.append('file', rankingFile)
@@ -147,9 +183,9 @@ export default function AdminPanel() {
       const res = await authedFetch('/api/admin/rankings/upload', { method: 'POST', body: form })
       const data = await res.json()
       if (!res.ok) { setUploadError(data.error ?? 'Upload failed'); return }
-      setRankingTitle('')
-      setRankingFile(null)
+      setRankingTitle(''); setRankingFile(null)
       if (fileRef.current) fileRef.current.value = ''
+      toast('Screenshot uploaded', 'success')
       fetchScreenshots(rankingUserId)
     } finally {
       setUploading(false)
@@ -163,6 +199,7 @@ export default function AdminPanel() {
       body: JSON.stringify({ id }),
     })
     setScreenshots((prev) => prev.filter((s) => s.id !== id))
+    toast('Screenshot deleted', 'info')
   }
 
   const clientUsers = users.filter((u) => u.role === 'client')
@@ -252,7 +289,7 @@ export default function AdminPanel() {
               )}
 
               <div className="overflow-x-auto -mx-6 px-6">
-                <table className="w-full text-sm min-w-[600px]">
+                <table className="w-full text-sm min-w-[640px]">
                   <thead>
                     <tr className="border-b border-border">
                       {['Name', 'Email', 'Role', 'Status', 'GSC Property', 'Joined', ''].map((h) => (
@@ -260,44 +297,81 @@ export default function AdminPanel() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody>
                     {users.map((u) => (
-                      <tr key={u.id} className="hover:bg-black/3 transition-colors">
-                        <td className="py-3 pr-4 text-foreground font-medium whitespace-nowrap">{u.name}</td>
-                        <td className="py-3 pr-4 text-muted text-xs whitespace-nowrap">{u.email}</td>
-                        <td className="py-3 pr-4"><Badge variant={u.role === 'admin' ? 'warning' : 'info'}>{u.role}</Badge></td>
-                        <td className="py-3 pr-4"><Badge variant={u.status === 'active' ? 'success' : 'default'}>{u.status}</Badge></td>
-                        <td className="py-3 pr-4">
-                          {editingGsc === u.id ? (
-                            <div className="flex items-center gap-1">
-                              <input
-                                type="text"
-                                placeholder="sc-domain:example.com"
-                                value={gscInputs[u.id] ?? u.gsc_site_url ?? ''}
-                                onChange={(e) => setGscInputs({ ...gscInputs, [u.id]: e.target.value })}
-                                className="bg-background border border-primary/40 rounded-lg px-2 py-1 text-foreground text-xs w-44 focus:outline-none focus:border-primary"
-                              />
-                              <button onClick={() => handleSaveGsc(u.id)} className="text-emerald-600 text-xs hover:text-emerald-700 px-1">✓</button>
-                              <button onClick={() => setEditingGsc(null)} className="text-muted text-xs hover:text-foreground px-1">✕</button>
+                      <>
+                        <tr key={u.id} className="border-b border-border/50 hover:bg-black/3 transition-colors">
+                          <td className="py-3 pr-4 text-foreground font-medium whitespace-nowrap">{u.name}</td>
+                          <td className="py-3 pr-4 text-muted text-xs whitespace-nowrap">{u.email}</td>
+                          <td className="py-3 pr-4"><Badge variant={u.role === 'admin' ? 'warning' : 'info'}>{u.role}</Badge></td>
+                          <td className="py-3 pr-4"><Badge variant={u.status === 'active' ? 'success' : 'default'}>{u.status}</Badge></td>
+                          <td className="py-3 pr-4">
+                            {editingGsc === u.id ? (
+                              <div className="flex items-center gap-1">
+                                <input
+                                  type="text"
+                                  placeholder="sc-domain:example.com"
+                                  value={gscInputs[u.id] ?? u.gsc_site_url ?? ''}
+                                  onChange={(e) => setGscInputs({ ...gscInputs, [u.id]: e.target.value })}
+                                  className="bg-background border border-primary/40 rounded-lg px-2 py-1 text-foreground text-xs w-44 focus:outline-none focus:border-primary"
+                                />
+                                <button onClick={() => handleSaveGsc(u.id)} className="text-emerald-600 text-xs hover:text-emerald-700 px-1">✓</button>
+                                <button onClick={() => setEditingGsc(null)} className="text-muted text-xs hover:text-foreground px-1">✕</button>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => { setEditingGsc(u.id); setGscInputs({ ...gscInputs, [u.id]: u.gsc_site_url ?? '' }) }}
+                                className="text-xs text-muted hover:text-primary transition-colors"
+                              >
+                                {u.gsc_site_url
+                                  ? <span className="text-primary font-mono">{u.gsc_site_url}</span>
+                                  : <span className="text-muted/50">+ Set URL</span>}
+                              </button>
+                            )}
+                          </td>
+                          <td className="py-3 pr-4 text-muted text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleDateString()}</td>
+                          <td className="py-3 text-right">
+                            <div className="flex items-center justify-end gap-1">
+                              {u.role === 'client' && (
+                                <button
+                                  onClick={() => setExpandedTabsUser(expandedTabsUser === u.id ? null : u.id)}
+                                  title="Configure visible tabs"
+                                  className={`p-1.5 rounded-lg transition-colors ${expandedTabsUser === u.id ? 'text-primary bg-primary/10' : 'text-muted hover:text-primary hover:bg-primary/10'}`}
+                                >
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                                    <rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/>
+                                  </svg>
+                                </button>
+                              )}
+                              <button onClick={() => handleDeleteUser(u.id)} className="text-muted hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50">
+                                <TrashIcon />
+                              </button>
                             </div>
-                          ) : (
-                            <button
-                              onClick={() => { setEditingGsc(u.id); setGscInputs({ ...gscInputs, [u.id]: u.gsc_site_url ?? '' }) }}
-                              className="text-xs text-muted hover:text-primary transition-colors"
-                            >
-                              {u.gsc_site_url
-                                ? <span className="text-primary font-mono">{u.gsc_site_url}</span>
-                                : <span className="text-muted/50">+ Set URL</span>}
-                            </button>
-                          )}
-                        </td>
-                        <td className="py-3 pr-4 text-muted text-xs whitespace-nowrap">{new Date(u.created_at).toLocaleDateString()}</td>
-                        <td className="py-3 text-right">
-                          <button onClick={() => handleDeleteUser(u.id)} className="text-muted hover:text-red-600 transition-colors p-1">
-                            <TrashIcon />
-                          </button>
-                        </td>
-                      </tr>
+                          </td>
+                        </tr>
+                        {/* Tab visibility panel */}
+                        {expandedTabsUser === u.id && (
+                          <tr key={`${u.id}-tabs`}>
+                            <td colSpan={7} className="pb-3 pt-0">
+                              <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 mx-0">
+                                <p className="text-xs font-semibold text-primary mb-3 uppercase tracking-wide">Visible tabs for {u.name}</p>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                  {ALL_TABS.map((tabKey) => {
+                                    const isVisible = !u.visible_tabs || u.visible_tabs.includes(tabKey)
+                                    return (
+                                      <div key={tabKey} className="flex items-center justify-between gap-2 bg-background border border-border rounded-lg px-3 py-2">
+                                        <span className="text-sm text-foreground">{TAB_LABELS[tabKey]}</span>
+                                        <Toggle checked={isVisible} onChange={() => handleToggleTab(u.id, tabKey)} />
+                                      </div>
+                                    )
+                                  })}
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     ))}
                     {users.length === 0 && (
                       <tr><td colSpan={7} className="py-8 text-center text-muted text-sm">No users yet</td></tr>
@@ -317,11 +391,7 @@ export default function AdminPanel() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               <div>
                 <label className="text-muted text-xs mb-1 block">Client User</label>
-                <select
-                  value={rankingUserId}
-                  onChange={(e) => setRankingUserId(e.target.value)}
-                  className={selectClass}
-                >
+                <select value={rankingUserId} onChange={(e) => setRankingUserId(e.target.value)} className={selectClass}>
                   <option value="">Select a user...</option>
                   {clientUsers.map((u) => (
                     <option key={u.id} value={u.id}>{u.name} ({u.email})</option>
@@ -330,48 +400,25 @@ export default function AdminPanel() {
               </div>
               <div>
                 <label className="text-muted text-xs mb-1 block">Title / Label (optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Google Rankings – May 2025"
-                  value={rankingTitle}
-                  onChange={(e) => setRankingTitle(e.target.value)}
-                  className={inputClass}
-                />
+                <input type="text" placeholder="e.g. Google Rankings – May 2025" value={rankingTitle}
+                  onChange={(e) => setRankingTitle(e.target.value)} className={inputClass} />
               </div>
             </div>
-
             <div className="mb-4">
               <label className="text-muted text-xs mb-1 block">Screenshot Image</label>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
+              <input ref={fileRef} type="file" accept="image/*"
                 onChange={(e) => setRankingFile(e.target.files?.[0] ?? null)}
-                className="block w-full text-sm text-muted file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
-              />
-              {rankingFile && (
-                <p className="text-xs text-muted mt-1">{rankingFile.name} · {(rankingFile.size / 1024).toFixed(0)} KB</p>
-              )}
+                className="block w-full text-sm text-muted file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer" />
+              {rankingFile && <p className="text-xs text-muted mt-1">{rankingFile.name} · {(rankingFile.size / 1024).toFixed(0)} KB</p>}
             </div>
-
-            {uploadError && (
-              <p className="text-red-600 text-sm mb-3">{uploadError}</p>
-            )}
-
+            {uploadError && <p className="text-red-600 text-sm mb-3">{uploadError}</p>}
             <Button onClick={handleUpload} disabled={uploading || !rankingFile || !rankingUserId}>
               {uploading ? 'Uploading...' : 'Upload Screenshot'}
             </Button>
           </Card>
 
           {rankingUserId && (
-            <Card
-              title="Uploaded Screenshots"
-              subtitle={
-                clientUsers.find((u) => u.id === rankingUserId)
-                  ? `For ${clientUsers.find((u) => u.id === rankingUserId)!.name}`
-                  : ''
-              }
-            >
+            <Card title="Uploaded Screenshots" subtitle={clientUsers.find((u) => u.id === rankingUserId) ? `For ${clientUsers.find((u) => u.id === rankingUserId)!.name}` : ''}>
               {loadingScreenshots ? (
                 <div className="py-8 text-center text-muted text-sm">Loading...</div>
               ) : screenshots.length === 0 ? (
@@ -380,16 +427,9 @@ export default function AdminPanel() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {screenshots.map((s) => (
                     <div key={s.id} className="bg-background border border-border rounded-xl overflow-hidden group">
-                      <div
-                        className="relative cursor-pointer"
-                        onClick={() => setLightbox(s.file_url)}
-                      >
+                      <div className="relative cursor-pointer" onClick={() => setLightbox(s.file_url)}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={s.file_url}
-                          alt={s.title ?? 'Ranking screenshot'}
-                          className="w-full h-40 object-cover object-top"
-                        />
+                        <img src={s.file_url} alt={s.title ?? 'Ranking screenshot'} className="w-full h-40 object-cover object-top" />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                           <svg className="opacity-0 group-hover:opacity-100 transition-opacity" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
                             <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
@@ -401,10 +441,7 @@ export default function AdminPanel() {
                           <p className="text-foreground text-sm font-medium truncate">{s.title ?? 'Untitled'}</p>
                           <p className="text-muted text-xs">{new Date(s.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
                         </div>
-                        <button
-                          onClick={() => handleDeleteScreenshot(s.id)}
-                          className="text-muted hover:text-red-600 transition-colors flex-shrink-0 p-1"
-                        >
+                        <button onClick={() => handleDeleteScreenshot(s.id)} className="text-muted hover:text-red-600 transition-colors flex-shrink-0 p-1">
                           <TrashIcon />
                         </button>
                       </div>
@@ -417,27 +454,15 @@ export default function AdminPanel() {
         </div>
       )}
 
-      {/* Lightbox */}
       {lightbox && (
-        <div
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
-          onClick={() => setLightbox(null)}
-        >
-          <button
-            className="absolute top-4 right-4 text-white/70 hover:text-white"
-            onClick={() => setLightbox(null)}
-          >
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+          <button className="absolute top-4 right-4 text-white/70 hover:text-white" onClick={() => setLightbox(null)}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
             </svg>
           </button>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={lightbox}
-            alt="Screenshot"
-            className="max-w-full max-h-full rounded-xl shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
+          <img src={lightbox} alt="Screenshot" className="max-w-full max-h-full rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()} />
         </div>
       )}
     </div>

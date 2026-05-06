@@ -14,7 +14,7 @@ export default async function RankingsPage() {
   const service = createServiceClient()
   const { data: profile } = await service
     .from('profiles')
-    .select('name, email, role')
+    .select('name, email, role, visible_tabs')
     .eq('id', user.id)
     .single()
 
@@ -40,7 +40,7 @@ export default async function RankingsPage() {
     <DashboardLayout
       title="Rankings"
       subtitle={isAdmin ? 'Upload and manage client ranking screenshots' : 'Your Google ranking screenshots'}
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '', role: profile?.role ?? '', visibleTabs: profile?.visible_tabs ?? null }}
     >
       {isAdmin ? (
         <RankingsUpload users={clientUsers ?? []} />

@@ -8,11 +8,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#0D9488',
+        primary: '#00C4B4',
         accent: '#F97316',
         background: '#FFFFFF',
-        card: '#F0FDFA',
-        border: '#CCFBF1',
+        card: '#F0FFFE',
+        border: '#B2EFEB',
         muted: '#64748B',
         foreground: '#0F172A',
       },
@@ -22,8 +22,8 @@ module.exports = {
         '3xl': '24px',
       },
       boxShadow: {
-        'card': '0 2px 16px rgba(13,148,136,0.08)',
-        'glow': '0 0 20px rgba(13,148,136,0.30)',
+        'card': '0 2px 16px rgba(0,196,180,0.08)',
+        'glow': '0 0 20px rgba(0,196,180,0.30)',
       },
     },
   },
