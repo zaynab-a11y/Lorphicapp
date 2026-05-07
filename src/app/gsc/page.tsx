@@ -1,17 +1,18 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
+import { getServerSession } from 'next-auth'
 import DashboardLayout from '@/components/layout/DashboardLayout'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
 import GscClient from './GscClient'
+import { prisma } from '@/lib/prisma'
 
 const ERROR_MESSAGES: Record<string, string> = {
   access_denied:         'Google sign-in was cancelled.',
   invalid_state:         'Security check failed. Please try connecting again.',
-  token_exchange_failed: 'Failed to exchange auth code — check GOOGLE_CLIENT_SECRET in Vercel.',
+  token_exchange_failed: 'Failed to exchange auth code — check GOOGLE_CLIENT_SECRET.',
   no_access_token:       'Google did not return an access token. Try again.',
   no_refresh_token:      'No refresh token received. Revoke app access at myaccount.google.com/permissions then reconnect.',
-  db_save_failed:        'Tokens received but failed to save. Check the gsc_tokens table exists in Supabase.',
+  db_save_failed:        'Tokens received but failed to save.',
 }
 
 export default async function GscPage({
@@ -19,28 +20,17 @@ export default async function GscPage({
 }: {
   searchParams: { connected?: string; error?: string }
 }) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const session = await getServerSession()
+  if (!session?.user?.email) redirect('/login')
+
+  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, email, role')
-    .eq('id', user.id)
-    .single()
+  const tokenRow = await prisma.gscToken.findUnique({ where: { userId: user.id } })
 
-  const isAdmin = profile?.role === 'admin'
-
-  // Check if THIS user has connected their Google account
-  const service = createServiceClient()
-  const { data: tokenRow } = await service
-    .from('gsc_tokens')
-    .select('access_token, gsc_site_url')
-    .eq('user_id', user.id)
-    .single()
-
-  const isConnected = !!tokenRow?.access_token
-  const gscSiteUrl = tokenRow?.gsc_site_url ?? null
+  const isConnected = !!tokenRow?.accessToken
+  const gscSiteUrl = tokenRow?.gscSiteUrl ?? null
+  const isAdmin = user.role === 'admin'
 
   const initialError = searchParams.error
     ? (ERROR_MESSAGES[searchParams.error] ?? `Unexpected error: ${searchParams.error}`)
@@ -50,7 +40,7 @@ export default async function GscPage({
     <DashboardLayout
       title="GSC Updates"
       subtitle="Google Search Console performance data"
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: user.email, name: user.name, role: user.role, visibleTabs: user.visibleTabs as string[] | null }}
     >
       <GscClient
         isAdmin={isAdmin}

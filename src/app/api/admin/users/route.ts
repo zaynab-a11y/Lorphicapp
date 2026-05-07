@@ -1,39 +1,40 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getServerSession } from 'next-auth'
+import { prisma } from '@/lib/prisma'
 
 async function requireAdmin() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { supabase, user: null, profile: null }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  return { supabase, user, profile }
+  const session = await getServerSession()
+  if (!session?.user?.email) return null
+  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
+  if (!user || user.role !== 'admin') return null
+  return user
 }
 
 export async function GET() {
-  const { supabase, profile } = await requireAdmin()
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const admin = await requireAdmin()
+  if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false })
+  const users = await prisma.user.findMany({
+    orderBy: { createdAt: 'desc' },
+    select: { id: true, email: true, name: true, role: true, status: true, gscSiteUrl: true, visibleTabs: true, createdAt: true },
+  })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ users: data })
+  return NextResponse.json({ users })
 }
 
 export async function PATCH(request: NextRequest) {
-  const { supabase, user, profile } = await requireAdmin()
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const admin = await requireAdmin()
+  if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { id, status, role, gsc_site_url } = await request.json()
-  const updates: Record<string, string> = {}
+  const body = await request.json()
+  const { id, status, role, gsc_site_url, visible_tabs } = body
+
+  const updates: Record<string, unknown> = {}
   if (status) updates.status = status
   if (role) updates.role = role
-  if (gsc_site_url !== undefined) updates.gsc_site_url = gsc_site_url
+  if (gsc_site_url !== undefined) updates.gscSiteUrl = gsc_site_url
+  if (visible_tabs !== undefined) updates.visibleTabs = visible_tabs
 
-  const targetId = id === 'self' ? user!.id : id
-  const { error } = await supabase.from('profiles').update(updates).eq('id', targetId)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await prisma.user.update({ where: { id }, data: updates })
   return NextResponse.json({ success: true })
 }

@@ -1,10 +1,8 @@
 'use client'
 
-export const dynamic = 'force-dynamic'
-
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+import { signIn } from 'next-auth/react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -12,17 +10,20 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const result = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+    })
 
-    if (error) {
-      setError(error.message)
+    if (result?.error) {
+      setError('Invalid email or password')
       setLoading(false)
     } else {
       router.push('/dashboard')

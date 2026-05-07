@@ -1,52 +1,46 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { getServerSession } from 'next-auth'
+import { prisma } from '@/lib/prisma'
 
 async function requireAdmin() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { supabase, user: null, profile: null }
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-  return { supabase, user, profile }
+  const session = await getServerSession()
+  if (!session?.user?.email) return null
+  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
+  if (!user || user.role !== 'admin') return null
+  return user
 }
 
 export async function GET() {
-  const { supabase, profile } = await requireAdmin()
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const admin = await requireAdmin()
+  if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
-  const { data, error } = await supabase
-    .from('activity_feed')
-    .select('*, profiles(name, email)')
-    .order('created_at', { ascending: false })
+  const activity = await prisma.activityFeed.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: { user: { select: { name: true, email: true } } },
+  })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ activity: data })
+  return NextResponse.json({ activity })
 }
 
 export async function POST(request: NextRequest) {
-  const { supabase, profile } = await requireAdmin()
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const admin = await requireAdmin()
+  if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { user_id, type, title, description, impact } = await request.json()
-  if (!user_id || !type || !title || !description) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
-  }
+  if (!user_id || !type || !title || !description) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
-  const { data, error } = await supabase
-    .from('activity_feed')
-    .insert({ user_id, type, title, description, impact: impact ?? 'medium' })
-    .select()
-    .single()
+  const item = await prisma.activityFeed.create({
+    data: { userId: user_id, type, title, description, impact: impact ?? 'medium' },
+  })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ item: data })
+  return NextResponse.json({ item })
 }
 
 export async function DELETE(request: NextRequest) {
-  const { supabase, profile } = await requireAdmin()
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  const admin = await requireAdmin()
+  if (!admin) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { id } = await request.json()
-  const { error } = await supabase.from('activity_feed').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  await prisma.activityFeed.delete({ where: { id } })
   return NextResponse.json({ success: true })
 }

@@ -1,52 +1,40 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
+import { getServerSession } from 'next-auth'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import StatCard from '@/components/ui/StatCard'
 import Card from '@/components/ui/Card'
 import TrafficChart from '@/components/charts/TrafficChart'
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 import { trafficChartData } from '@/lib/mockData'
 
 export default async function DashboardPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const session = await getServerSession()
+  if (!session?.user?.email) redirect('/login')
+
+  const user = await prisma.user.findUnique({
+    where: { email: session.user.email },
+    include: { keywords: true, activityFeed: { select: { id: true } } },
+  })
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, email, role')
-    .eq('id', user.id)
-    .single()
-
-  const { data: keywords } = await supabase
-    .from('keywords')
-    .select('id, keyword, position, prev_position, volume, difficulty')
-    .eq('user_id', user.id)
-    .order('position', { ascending: true })
-
-  const { data: activityCount } = await supabase
-    .from('activity_feed')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-
-  const kws = keywords ?? []
+  const kws = user.keywords
   const top5 = kws.slice(0, 5)
   const totalKeywords = kws.length
-  const top3 = kws.filter((k) => k.position != null && k.position <= 3).length
-  const top10 = kws.filter((k) => k.position != null && k.position <= 10).length
-  const top30 = kws.filter((k) => k.position != null && k.position <= 30).length
+  const top3 = kws.filter((k) => k.position != null && Number(k.position) <= 3).length
+  const top10 = kws.filter((k) => k.position != null && Number(k.position) <= 10).length
+  const top30 = kws.filter((k) => k.position != null && Number(k.position) <= 30).length
   const avgPosition = kws.length
-    ? Math.round(kws.reduce((s, k) => s + (k.position ?? 0), 0) / kws.length)
+    ? Math.round(kws.reduce((s, k) => s + Number(k.position ?? 0), 0) / kws.length)
     : 0
 
   return (
     <DashboardLayout
       title="Dashboard"
       subtitle="Welcome back — here's your SEO overview"
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: user.email, name: user.name, role: user.role, visibleTabs: user.visibleTabs as string[] | null }}
     >
-      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         <StatCard
           title="Keywords Tracked"
@@ -85,7 +73,7 @@ export default async function DashboardPage() {
         />
         <StatCard
           title="SEO Updates"
-          value={(activityCount as unknown as { count: number } | null)?.count?.toString() ?? '0'}
+          value={user.activityFeed.length.toString()}
           changeLabel="total updates"
           color="purple"
           icon={
@@ -97,7 +85,6 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Charts Row */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
         <div className="xl:col-span-2">
           <Card title="Traffic Overview" subtitle="Clicks & impressions — last 30 days">
@@ -127,7 +114,6 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Top Keywords Table */}
       <Card title="Top Keywords" subtitle="Your best performing keywords">
         {top5.length === 0 ? (
           <p className="text-muted text-sm py-4">No keywords assigned yet. Contact your administrator.</p>
@@ -145,8 +131,8 @@ export default async function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {top5.map((row) => {
-                  const change = row.prev_position != null && row.position != null
-                    ? row.prev_position - row.position : 0
+                  const change = row.prevPosition != null && row.position != null
+                    ? Number(row.prevPosition) - Number(row.position) : 0
                   return (
                     <tr key={row.id} className="hover:bg-black/3 transition-colors">
                       <td className="py-3 pr-4 text-foreground font-medium">{row.keyword}</td>

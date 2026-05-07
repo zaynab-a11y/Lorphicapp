@@ -1,34 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { getServerSession } from 'next-auth'
+import bcrypt from 'bcryptjs'
+import { prisma } from '@/lib/prisma'
 
 export async function POST(request: NextRequest) {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const session = await getServerSession()
+  if (!session?.user?.email) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single()
-
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-  }
+  const admin = await prisma.user.findUnique({ where: { email: session.user.email } })
+  if (!admin || admin.role !== 'admin') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
   const { email, password, name, role = 'client' } = await request.json()
-  if (!email || !password || !name) {
-    return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
-  }
+  if (!email || !password || !name) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
 
-  const service = createServiceClient()
-  const { data, error } = await service.auth.admin.createUser({
-    email,
-    password,
-    user_metadata: { name, role },
-    email_confirm: true,
+  const hashed = await bcrypt.hash(password, 10)
+
+  const user = await prisma.user.create({
+    data: { email, password: hashed, name, role },
+    select: { id: true, email: true, name: true, role: true },
   })
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-  return NextResponse.json({ user: data.user })
+  return NextResponse.json({ user })
 }

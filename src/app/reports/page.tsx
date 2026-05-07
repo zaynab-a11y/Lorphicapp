@@ -1,10 +1,11 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
+import { getServerSession } from 'next-auth'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import ReportDownloadButton from './ReportDownloadButton'
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 
 const colorMap: Record<string, { icon: string; bg: string; border: string; btn: string }> = {
   full: { icon: 'text-primary', bg: 'bg-primary/10', border: 'border-primary/20', btn: 'bg-primary hover:bg-primary/90' },
@@ -52,30 +53,24 @@ const reportMeta: Record<string, { title: string; description: string; pages: st
 }
 
 export default async function ReportsPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const session = await getServerSession()
+  if (!session?.user?.email) redirect('/login')
+
+  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, email')
-    .eq('id', user.id)
-    .single()
+  const reportList = await prisma.report.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+  })
 
-  const { data: reports } = await supabase
-    .from('reports')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-
-  const reportList = reports ?? []
   const availableTypes = Array.from(new Set(reportList.map((r) => r.type)))
 
   return (
     <DashboardLayout
       title="Reports"
       subtitle="Download your SEO performance reports"
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: user.email, name: user.name, role: user.role, visibleTabs: user.visibleTabs as string[] | null }}
     >
       {availableTypes.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -122,7 +117,7 @@ export default async function ReportsPage() {
                     <div>
                       <p className="text-foreground text-sm font-medium">{report.title}</p>
                       <p className="text-muted text-xs">
-                        {new Date(report.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · PDF format
+                        {new Date(report.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} · PDF format
                       </p>
                     </div>
                   </div>

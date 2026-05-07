@@ -1,37 +1,32 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
+import { getServerSession } from 'next-auth'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 
 export default async function RankingsPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const session = await getServerSession()
+  if (!session?.user?.email) redirect('/login')
+
+  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, email')
-    .eq('id', user.id)
-    .single()
+  const kws = await prisma.keyword.findMany({
+    where: { userId: user.id },
+    orderBy: { position: 'asc' },
+  })
 
-  const { data: keywords } = await supabase
-    .from('keywords')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('position', { ascending: true, nullsFirst: false })
-
-  const kws = keywords ?? []
-  const improved = kws.filter((r) => r.prev_position != null && r.position != null && r.prev_position > r.position).length
-  const declined = kws.filter((r) => r.prev_position != null && r.position != null && r.prev_position < r.position).length
-  const unchanged = kws.filter((r) => r.prev_position === r.position).length
+  const improved = kws.filter((r) => r.prevPosition != null && r.position != null && Number(r.prevPosition) > Number(r.position)).length
+  const declined = kws.filter((r) => r.prevPosition != null && r.position != null && Number(r.prevPosition) < Number(r.position)).length
+  const unchanged = kws.filter((r) => r.prevPosition != null && r.position != null && Number(r.prevPosition) === Number(r.position)).length
 
   return (
     <DashboardLayout
       title="Rankings"
       subtitle="Keyword position tracking and changes"
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: user.email, name: user.name, role: user.role, visibleTabs: user.visibleTabs as string[] | null }}
     >
       <div className="flex flex-wrap gap-3 mb-6">
         <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3 flex items-center gap-2">
@@ -74,19 +69,16 @@ export default async function RankingsPage() {
               </thead>
               <tbody className="divide-y divide-border">
                 {kws.map((row, idx) => {
-                  const change = row.prev_position != null && row.position != null
-                    ? row.prev_position - row.position : 0
+                  const change = row.prevPosition != null && row.position != null
+                    ? Number(row.prevPosition) - Number(row.position) : 0
+                  const pos = row.position != null ? Number(row.position) : null
                   return (
                     <tr key={row.id} className="hover:bg-black/3 transition-colors">
                       <td className="py-3.5 pr-4 text-muted text-xs">{idx + 1}</td>
                       <td className="py-3.5 pr-4 text-foreground font-medium">{row.keyword}</td>
                       <td className="py-3.5 px-4 text-right">
-                        {row.position != null ? (
-                          <span className={`font-bold ${
-                            row.position <= 3 ? 'text-emerald-600' :
-                            row.position <= 10 ? 'text-primary' :
-                            row.position <= 20 ? 'text-amber-600' : 'text-muted'
-                          }`}>#{row.position}</span>
+                        {pos != null ? (
+                          <span className={`font-bold ${pos <= 3 ? 'text-emerald-600' : pos <= 10 ? 'text-primary' : pos <= 20 ? 'text-amber-600' : 'text-muted'}`}>#{pos}</span>
                         ) : <span className="text-muted">—</span>}
                       </td>
                       <td className="py-3.5 px-4 text-right">
@@ -110,7 +102,7 @@ export default async function RankingsPage() {
                           </div>
                         ) : <span className="text-muted text-right block">—</span>}
                       </td>
-                      <td className="py-3.5 pl-4 text-primary text-xs font-mono">{row.target_url ?? '—'}</td>
+                      <td className="py-3.5 pl-4 text-primary text-xs font-mono">{row.targetUrl ?? '—'}</td>
                     </tr>
                   )
                 })}

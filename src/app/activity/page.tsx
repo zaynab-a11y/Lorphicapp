@@ -1,9 +1,10 @@
 export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
+import { getServerSession } from 'next-auth'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
-import { createClient } from '@/lib/supabase/server'
+import { prisma } from '@/lib/prisma'
 
 const typeConfig: Record<string, { label: string; color: string; bg: string; border: string; icon: React.ReactNode }> = {
   backlink: {
@@ -53,23 +54,17 @@ const impactConfig: Record<string, { label: string; className: string }> = {
 }
 
 export default async function ActivityPage() {
-  const supabase = createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const session = await getServerSession()
+  if (!session?.user?.email) redirect('/login')
+
+  const user = await prisma.user.findUnique({ where: { email: session.user.email } })
   if (!user) redirect('/login')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('name, email')
-    .eq('id', user.id)
-    .single()
+  const items = await prisma.activityFeed.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: 'desc' },
+  })
 
-  const { data: activityData } = await supabase
-    .from('activity_feed')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-
-  const items = activityData ?? []
   const backlinks = items.filter((a) => a.type === 'backlink').length
   const technical = items.filter((a) => a.type === 'technical').length
   const content = items.filter((a) => a.type === 'content').length
@@ -78,9 +73,8 @@ export default async function ActivityPage() {
     <DashboardLayout
       title="Activity Feed"
       subtitle="All SEO updates and improvements"
-      user={{ email: profile?.email ?? user.email ?? '', name: profile?.name ?? '' }}
+      user={{ email: user.email, name: user.name, role: user.role, visibleTabs: user.visibleTabs as string[] | null }}
     >
-      {/* Summary */}
       <div className="grid grid-cols-3 gap-4 mb-6">
         <div className="bg-card border border-primary/20 rounded-2xl p-4 flex items-center gap-3">
           <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
@@ -139,7 +133,7 @@ export default async function ActivityPage() {
                         <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${impact.className}`}>{impact.label} Impact</span>
                       </div>
                       <span className="text-muted text-xs flex-shrink-0">
-                        {new Date(item.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        {new Date(item.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>
                     <p className="text-muted text-sm leading-relaxed">{item.description}</p>
