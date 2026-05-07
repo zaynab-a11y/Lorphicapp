@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  password    String
+  name        String
+  role        Role      @default(client)
+  status      Status    @default(active)
+  gscSiteUrl  String?   @map("gsc_site_url") @db.VarChar(500)
+  visibleTabs Json?     @map("visible_tabs")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  gscToken        GscToken?
+  keywords        Keyword[]
+  activityFeed    ActivityFeed[]
+  reports         Report[]
+  rankingScreenshots RankingScreenshot[]
+  backlinkFiles   BacklinkFile[]
+
+  @@map("users")
+}
+
+model GscToken {
+  id           String    @id @default(uuid())
+  userId       String    @unique @map("user_id")
+  accessToken  String    @map("access_token") @db.Text
+  refreshToken String?   @map("refresh_token") @db.Text
+  expiresAt    DateTime? @map("expires_at")
+  gscSiteUrl   String?   @map("gsc_site_url") @db.VarChar(500)
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("gsc_tokens")
+}
+
+model Keyword {
+  id           String   @id @default(uuid())
+  userId       String   @map("user_id")
+  keyword      String   @db.VarChar(500)
+  targetUrl    String?  @map("target_url") @db.VarChar(1000)
+  position     Decimal? @db.Decimal(6, 1)
+  prevPosition Decimal? @map("prev_position") @db.Decimal(6, 1)
+  volume       Int?
+  difficulty   Int?
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("keywords")
+}
+
+model ActivityFeed {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  type        String   @db.VarChar(50)
+  title       String   @db.VarChar(500)
+  description String   @db.Text
+  impact      Impact   @default(medium)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("activity_feed")
+}
+
+model Report {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String   @db.VarChar(500)
+  type      String   @db.VarChar(50)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("reports")
+}
+
+model RankingScreenshot {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String?  @db.VarChar(500)
+  fileUrl   String   @map("file_url") @db.VarChar(1000)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("ranking_screenshots")
+}
+
+model BacklinkFile {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  title     String   @db.VarChar(500)
+  fileUrl   String   @map("file_url") @db.VarChar(1000)
+  fileType  String   @map("file_type") @db.VarChar(20)
+  fileSize  BigInt   @map("file_size")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("backlink_files")
+}
+
+enum Role {
+  admin
+  client
+}
+
+enum Status {
+  active
+  inactive
+}
+
+enum Impact {
+  low
+  medium
+  high
+}
