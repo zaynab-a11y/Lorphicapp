@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import GscClient from './GscClient'
 import { prisma } from '@/lib/prisma'
@@ -20,7 +21,7 @@ export default async function GscPage({
 }: {
   searchParams: { connected?: string; error?: string }
 }) {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) redirect('/login')
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })

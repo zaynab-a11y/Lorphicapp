@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Card from '@/components/ui/Card'
 import { prisma } from '@/lib/prisma'
@@ -54,7 +55,7 @@ const impactConfig: Record<string, { label: string; className: string }> = {
 }
 
 export default async function ActivityPage() {
-  const session = await getServerSession()
+  const session = await getServerSession(authOptions)
   if (!session?.user?.email) redirect('/login')
 
   const user = await prisma.user.findUnique({ where: { email: session.user.email } })

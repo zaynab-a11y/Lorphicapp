@@ -1,9 +1,9 @@
-import NextAuth from 'next-auth'
+import NextAuth, { AuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 
-const handler = NextAuth({
+export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
       name: 'credentials',
@@ -22,7 +22,6 @@ const handler = NextAuth({
 
         const passwordMatch = await bcrypt.compare(credentials.password, user.password)
         if (!passwordMatch) return null
-
         if (user.status !== 'active') return null
 
         return {
@@ -59,6 +58,7 @@ const handler = NextAuth({
   session: {
     strategy: 'jwt',
   },
-})
+}
 
+const handler = NextAuth(authOptions)
 export { handler as GET, handler as POST }
