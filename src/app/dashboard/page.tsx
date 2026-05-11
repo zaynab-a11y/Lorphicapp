@@ -1,8 +1,5 @@
 export const dynamic = 'force-dynamic'
 
-import { redirect } from 'next/navigation'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth-options'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import StatCard from '@/components/ui/StatCard'
 import Card from '@/components/ui/Card'
@@ -11,14 +8,11 @@ import { prisma } from '@/lib/prisma'
 import { trafficChartData } from '@/lib/mockData'
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.email) redirect('/login')
-
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+  const user = await prisma.user.findFirst({
+    where: { role: 'admin' },
     include: { keywords: true, activityFeed: { select: { id: true } } },
   })
-  if (!user) redirect('/login')
+  if (!user) return <div>No user found</div>
 
   const kws = user.keywords
   const top5 = kws.slice(0, 5)
